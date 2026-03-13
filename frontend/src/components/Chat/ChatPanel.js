@@ -37,18 +37,18 @@ function ChatPanel({ onFirstMessage }) {
     setMessages(prev => [...prev, userMsg]);
     setInput("");
 
-    /* BOT LOADING MESSAGE */
     const loadingId = Date.now() + 1;
 
+    /* loading message */
     setMessages(prev => [
       ...prev,
-      { id: loadingId, role: "assistant", text: "..."}
+      { id: loadingId, role: "assistant", loading: true }
     ]);
 
-    const fullText =
+    const response =
       dummyResponses[Math.floor(Math.random() * dummyResponses.length)];
 
-    const words = fullText.split(" ");
+    const words = response.split(" ");
 
     let index = 0;
 
@@ -61,7 +61,11 @@ function ChatPanel({ onFirstMessage }) {
         setMessages(prev =>
           prev.map(m =>
             m.id === loadingId
-              ? { ...m, text: words.slice(0, index).join(" ") }
+              ? {
+                  ...m,
+                  loading: false,
+                  text: words.slice(0, index).join(" ")
+                }
               : m
           )
         );
@@ -70,39 +74,13 @@ function ChatPanel({ onFirstMessage }) {
           clearInterval(interval);
         }
 
-      }, 100); // typing speed
+      }, 60);
 
-    }, 600); // loading delay
+    }, 900); // loading delay
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") sendMessage();
-  };
-
-  const handleUpload = (e) => {
-
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const userMsg = {
-      id: Date.now(),
-      role: "user",
-      text: `📎 ${file.name}`
-    };
-
-    const botMsg = {
-      id: Date.now() + 1,
-      role: "assistant",
-      text: `File "${file.name}" received! I'll analyze it shortly.`
-    };
-
-    setMessages(prev => [...prev, userMsg]);
-
-    setTimeout(() => {
-      setMessages(prev => [...prev, botMsg]);
-    }, 600);
-
-    e.target.value = "";
   };
 
   const theme = isDark ? "dark" : "light";
@@ -124,17 +102,6 @@ function ChatPanel({ onFirstMessage }) {
 
       <div className="chat-input-row">
 
-        {/* upload */}
-        <label className="chat-plus-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-
-          <input type="file" style={{display:"none"}} onChange={handleUpload}/>
-        </label>
-
-        {/* input */}
         <input
           className="chat-input"
           placeholder="Type a message..."
@@ -143,12 +110,8 @@ function ChatPanel({ onFirstMessage }) {
           onKeyDown={handleKeyDown}
         />
 
-        {/* send */}
         <button className="chat-send-btn" onClick={sendMessage}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
+          Send
         </button>
 
       </div>
