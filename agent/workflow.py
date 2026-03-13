@@ -31,10 +31,7 @@ Your responsibilities:
    use the available tools.
 
 Tools available:
-- schema_retriever
-- sql_generator
-- sql_executor
-- insight_generator
+- sql_generator: use to generate sql query
 
 Always use schema information before generating SQL.
 Never invent tables or columns.
@@ -54,7 +51,7 @@ tools =[sql_generator
         ]
 tool_node = ToolNode(tools)
 
-llm = ChatOpenAI(model="gpt-4o-mini",streaming=True).bind_tools(tools)
+llm = ChatOpenAI(model="gpt-4o-mini").bind_tools(tools)
 
 graph = StateGraph(chatstate)
 graph.add_node("chat_node",chat_node)
