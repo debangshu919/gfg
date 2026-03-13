@@ -77,7 +77,7 @@ def get_schema():
 
    return schema_text
 
-# @tool
+@tool
 def sql_generator(question: str) -> dict:
    """
    Generate SQL query from a user question using the database schema.
