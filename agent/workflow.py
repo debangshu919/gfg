@@ -7,8 +7,7 @@ from typing import Annotated, TypedDict
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import InMemorySaver
-from agent.tools.schema_tool import schema_retriever
-from agent.tools.sql_tool import sql_executor
+
 from agent.tools.sql_generator import sql_generator
 import uuid
 
@@ -51,11 +50,9 @@ Explain insights clearly.
 
 # *****************tools*******************
 
-tools =[schema_retriever,
-        sql_generator,
-        sql_executor
+tools =[sql_generator
         ]
-tool_node = ToolNode([schema_retriever])
+tool_node = ToolNode(tools)
 
 llm = ChatOpenAI(model="gpt-4o-mini",streaming=True).bind_tools(tools)
 
