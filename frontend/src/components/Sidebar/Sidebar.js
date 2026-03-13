@@ -1,5 +1,5 @@
 import React from "react";
-import sidebarStyles from "./SidebarStyles.js";
+ import sidebarStyles from "./SidebarStyles";
 
 const chatHistory = [
   { id: 1, title: "Graph Analysis Q3" },
@@ -7,6 +7,8 @@ const chatHistory = [
   { id: 3, title: "User Retention Data" },
   { id: 4, title: "Sales Funnel Report" },
   { id: 5, title: "Dashboard Overview" },
+  {id : 6, title: "Customer Feedback Analysis" },
+  {id : 7, title: "Product Performance Metrics" },
 ];
 
 function Sidebar({ isOpen, onClose, onOpen }) {

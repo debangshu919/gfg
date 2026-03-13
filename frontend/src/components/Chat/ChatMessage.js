@@ -1,12 +1,14 @@
 import React from "react";
-import chatStyles from "./chatStyles";
+import "./ChatMessage.css";
+import { useTheme } from "../../context/ThemeContext";
 
 function ChatMessage({ message }) {
+  const { isDark } = useTheme();
   const isUser = message.role === "user";
 
   return (
-    <div style={isUser ? chatStyles.msgUser : chatStyles.msgBot}>
-      <div style={isUser ? chatStyles.bubbleUser : chatStyles.bubbleBot}>
+    <div className={`chat-message-row ${isUser ? "user" : "bot"} ${isDark ? "dark" : "light"}`}>
+      <div className={`chat-bubble ${isUser ? "user" : "bot"}`}>
         {message.text}
       </div>
     </div>

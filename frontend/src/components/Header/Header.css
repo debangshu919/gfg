@@ -1,0 +1,174 @@
+/* ─── HEADER ───────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  border-radius: 8px;
+  padding: 10px 16px;
+
+  flex-shrink: 0;
+
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.dark .header {
+  background: #111111;
+  border: 1px solid #222222;
+}
+
+.light .header {
+  background: #f0f0f0;
+  border: 1px solid #e0e0e0;
+}
+
+
+/* ─── HAMBURGER ───────────────── */
+
+.header-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+
+  background: none;
+  border: none;
+
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.header-hamburger-line {
+  width: 18px;
+  height: 2px;
+
+  border-radius: 2px;
+
+  transition: background 0.3s;
+}
+
+.dark .header-hamburger-line {
+  background: #888;
+}
+
+.light .header-hamburger-line {
+  background: #555;
+}
+
+
+/* ─── TITLE ───────────────── */
+
+.header-title {
+  flex: 1;
+
+  font-size: 13px;
+  letter-spacing: 0.08em;
+
+  transition: color 0.3s;
+}
+
+.dark .header-title { color: #888; }
+.light .header-title { color: #555; }
+
+
+/* ─── THEME TOGGLE ───────────────── */
+
+.header-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  border-radius: 20px;
+  padding: 4px 10px;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.dark .header-theme-toggle {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+}
+
+.light .header-theme-toggle {
+  background: #e8e8e8;
+  border: 1px solid #d0d0d0;
+}
+
+
+/* ─── TOGGLE TRACK ───────────────── */
+
+.theme-toggle-track {
+  width: 32px;
+  height: 16px;
+
+  border-radius: 8px;
+
+  position: relative;
+}
+
+.dark .theme-toggle-track { background: #1a3a5c; }
+.light .theme-toggle-track { background: #d1d5db; }
+
+
+/* ─── KNOB ───────────────── */
+
+.theme-toggle-knob {
+  position: absolute;
+  top: 2px;
+
+  width: 12px;
+  height: 12px;
+
+  border-radius: 50%;
+
+  transition: left 0.25s ease;
+}
+
+.dark .theme-toggle-knob {
+  left: 16px;
+  background: #3b82f6;
+}
+
+.light .theme-toggle-knob {
+  left: 2px;
+  background: #fff;
+}
+
+
+/* ─── WINDOW DOTS ───────────────── */
+
+.header-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.header-dot {
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+}
+
+
+/* ─── MOBILE ≤492px ───────────────── */
+
+@media (max-width: 492px) {
+
+  .header-hamburger {
+    display: flex;
+  }
+
+  .header {
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+
+  .header-title {
+    font-size: 12px;
+  }
+
+}
