@@ -7,30 +7,36 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Optional
-
-
+from agent.tools.sql_validator import fix_sql, execute_sql
+from typing import Literal
+from langchain_core.prompts import load_prompt
 load_dotenv()
 
 # model output format
 class SQLResponse(BaseModel):
-    sql_query: str = Field(
-        description="PostgreSQL SELECT query written in a single line. Only use columns from the dataset.")
+    sql_query: Optional[str] = Field(
+        description="PostgreSQL SELECT query written in a single line. Only use columns from the dataset.",
+        default=None)
 
-    chart_type: str = Field(
+    chart_type: Optional[Literal['metric', 'bar','line','pie','scatter']] = Field(
         description="Best chart type to visualize the query result",
-        examples=["metric", "bar", "line", "pie", "scatter"])
+        default=None
+        )
     x_axis: Optional[str] = Field(
         description="Column name used for x-axis if the chart requires it",
         default=None)
     y_axis: Optional[str] = Field(
         description="Column name used for y-axis if the chart requires it",
         default=None)
+    message: Optional[str] = Field(
+        description="Give error message if dataset does not contain information required to answer this question.",
+        default=None)
     
-# *************llm-models**************
+# *************llm-models and prompts**************
 llm = ChatOpenAI(model="gpt-4o-mini")
 structured_llm = llm.with_structured_output(SQLResponse)
 
-
+template = load_prompt(r'agent\prompts\sql_gen_prompt.json')
 # *************get schema and sample of dataset**************
 def get_schema_and_samples():
    conn = psycopg2.connect(
@@ -79,96 +85,56 @@ def get_schema_and_samples():
       schema_text += "\n"
    cur.close()
    conn.close()
-   print(schema_text)
+   # print(schema_text)
    return schema_text
+SCHEMA_CONTEXT = get_schema_and_samples()
 
 # ************* Sql generator tool **************
-# @tool
+@tool
 def sql_generator(question: str) -> dict:
    """
    Generate SQL query from a user question using the database schema.
    Returns JSON containing SQL query and recommended chart type.
    """
-   schema = get_schema_and_samples()
-   prompt = f"""
-You are an expert data analyst and SQL specialist responsible for converting business questions into SQL queries for a business intelligence dashboard.
-Your goal is to translate a natural language question into a correct SQL query using the provided database schema.
-DATABASE STRUCTURE AND SAMPLE DATA:{schema}
-USER QUESTION:{question}
+   print("Sql generator tool called")
+   schema = SCHEMA_CONTEXT
+   prompt = template.invoke({'question':question,'schema':schema})
+   res = structured_llm.invoke(prompt)
+   result = res.model_dump()
+   print(result)
+   sql_query = result["sql_query"]
+   chart_type = result["chart_type"]
+   x_axis = result["x_axis"]
+   y_axis = result["y_axis"]
+   
+   if sql_query is None or sql_query == "null":
+    return json.dumps(result)
 
-TASK:
-1. Understand the user's analytical intent.
-2. Generate a valid SQL SELECT query that answers the question.
-3. Recommend the best chart type to visualize the result.
+   max_attempts = 3
 
-SCHEMA ANALYSIS:
-Before writing the SQL query:
-1. Identify the table(s) relevant to the user question.
-2. Identify the column(s) needed to answer the question.
-3. Ensure every column used in the SQL query exists in the schema.
-4. Use the sample rows to understand how values are formatted in the dataset.
-Only after confirming the relevant tables and columns, generate the SQL query.
-
-SQL RULES:
-1. Only generate SELECT queries.
-2. NEVER generate INSERT, UPDATE, DELETE, DROP, ALTER, or CREATE statements.
-3. Use only tables and columns that exist in the provided schema.
-4. Do not invent columns or tables.
-5. Write the SQL query in a SINGLE LINE.
-6. Prefer aggregation when analyzing data (SUM, AVG, COUNT).
-7. Use the sample rows only to understand how data values look.Do not assume they represent the entire dataset.
-8. Use GROUP BY when aggregating by categories.
-9. Use ORDER BY when ranking or sorting results.
-10. Use LIMIT when returning top results.
-11. Use LOWER() for case-insensitive string comparisons if filtering text values.
-12. Avoid returning large raw datasets unless explicitly requested.
-
-CHART SELECTION RULES:
-Choose the chart type based on the query result:
-metric: Use when the result returns a single numeric value (e.g., total, average, count).
-bar: Use when comparing values across categories.
-line: Use when showing trends over time or ordered sequences.
-pie: Use when showing percentage or distribution of a total.
-scatter: Use when showing the relationship between two numeric variables.
-
-
-AXIS SELECTION RULES:
-If a chart requires axes:
-x_axis: Use the categorical or time column.
-y_axis: Use the numeric aggregated column.
-If the chart type is "metric", x_axis and y_axis should be null.
-
-
-OUTPUT FORMAT:
-Return ONLY valid JSON.
-The JSON must follow this structure:
-{{
-  "sql_query": "SQL query written in one line",
-  "chart_type": "metric | bar | line | pie | scatter",
-  "x_axis": "column name or null",
-  "y_axis": "column name or null"
-}}
-
-Do not include explanations.
-Do not include markdown.
-Return only JSON.
-
-
-Example"
-
-User question: Which region generated the highest revenue?
-
-Expected output:
-{{
-  "sql_query": "SELECT region, SUM(revenue) AS total_revenue FROM sales GROUP BY region ORDER BY total_revenue DESC",
-  "chart_type": "bar",
-  "x_axis": "region",
-  "y_axis": "total_revenue"
-}}
-"""
-   result = structured_llm.invoke(prompt)
-   print(json.dumps(result.model_dump()))
-   return json.dumps(result.model_dump())
+   for attempt in range(max_attempts):
+      try:
+         print(f"Attempt {attempt + 1}: Executing SQL")
+         # safety check
+         if not sql_query.lower().strip().startswith("select"):
+            raise ValueError("Only SELECT queries are allowed")
+         # if "limit" not in sql_query.lower():
+         #    sql_query += " LIMIT 100"
+         data = execute_sql(sql_query)
+         print("SQL executed successfully")
+         return json.dumps({
+               "sql": sql_query,
+               "chart_type": chart_type,
+               "x_axis": x_axis,
+               "y_axis": y_axis
+         })
+      except Exception as e:
+         print("SQL failed:", str(e))
+         if attempt == max_attempts - 1:
+               raise Exception("SQL failed after retries")
+         # fix SQL using LLM
+         sql_query = fix_sql(sql_query, str(e), SCHEMA_CONTEXT)
 
 if __name__ == "__main__":
-   sql_generator("Total revenue from januarry to febrary in 2024")
+   res = sql_generator("Which region generated the highest average revenue per order in 2024?")
+   print(res)
