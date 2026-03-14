@@ -8,6 +8,7 @@ def fetch_data(sql_query: str) -> str:
     Fetches data from the PostgreSQL database using the provided SQL query.
     Takes a valid SQL SELECT query as input and returns the fetched data as a JSON string.
     """
+    print("fetch data tool called")
     try:
         conn = psycopg2.connect(
             host="aws-1-ap-southeast-1.pooler.supabase.com",
