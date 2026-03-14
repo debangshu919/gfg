@@ -13,17 +13,18 @@ function ChatPanel({ onFirstMessage }) {
 
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const firstMessageSent = useRef(false);
 
-  /* focus input on load */
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  /* allow typing anywhere to focus input */
+  /* allow typing anywhere */
   useEffect(() => {
 
     const handleGlobalTyping = (e) => {
@@ -34,27 +35,22 @@ function ChatPanel({ onFirstMessage }) {
 
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const key = e.key;
-
-      if (key.length === 1) {
+      if (e.key.length === 1) {
 
         inputRef.current?.focus();
-
-        setInput(prev => prev + key);
-
+        setInput(prev => prev + e.key);
         e.preventDefault();
+
       }
+
     };
 
     window.addEventListener("keydown", handleGlobalTyping);
 
-    return () => {
-      window.removeEventListener("keydown", handleGlobalTyping);
-    };
+    return () => window.removeEventListener("keydown", handleGlobalTyping);
 
   }, []);
 
-  /* auto scroll */
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -77,11 +73,7 @@ function ChatPanel({ onFirstMessage }) {
         setMessages(prev =>
           prev.map(m =>
             m.id === 1
-              ? {
-                  ...m,
-                  loading: false,
-                  text: words.slice(0, index).join(" ")
-                }
+              ? { ...m, loading: false, text: words.slice(0, index).join(" ") }
               : m
           )
         );
@@ -104,11 +96,7 @@ function ChatPanel({ onFirstMessage }) {
       onFirstMessage?.();
     }
 
-    const userMsg = {
-      id: Date.now(),
-      role: "user",
-      text
-    };
+    const userMsg = { id: Date.now(), role: "user", text };
 
     setMessages(prev => [...prev, userMsg]);
     setInput("");
@@ -143,11 +131,7 @@ function ChatPanel({ onFirstMessage }) {
           setMessages(prev =>
             prev.map(m =>
               m.id === loadingId
-                ? {
-                    ...m,
-                    loading: false,
-                    text: words.slice(0, index).join(" ")
-                  }
+                ? { ...m, loading: false, text: words.slice(0, index).join(" ") }
                 : m
             )
           );
@@ -163,11 +147,7 @@ function ChatPanel({ onFirstMessage }) {
       setMessages(prev =>
         prev.map(m =>
           m.id === loadingId
-            ? {
-                ...m,
-                loading: false,
-                text: `⚠️ Error: ${err.message}`
-              }
+            ? { ...m, loading: false, text: `⚠️ Error: ${err.message}` }
             : m
         )
       );
@@ -180,23 +160,38 @@ function ChatPanel({ onFirstMessage }) {
     if (e.key === "Enter") sendMessage();
   };
 
+  /* CSV Upload with validation */
   const handleUpload = (e) => {
 
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!firstMessageSent.current) {
-      firstMessageSent.current = true;
-      onFirstMessage?.();
+    const isCSV =
+      file.type === "text/csv" ||
+      file.name.toLowerCase().endsWith(".csv");
+
+    if (!isCSV) {
+
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: "assistant",
+          text: "⚠️ Invalid file. Please upload a CSV file only."
+        }
+      ]);
+
+      e.target.value = "";
+      return;
     }
 
-    const fileMsg = {
+    const userMsg = {
       id: Date.now(),
       role: "user",
-      text: `📎 ${file.name}`
+      text: `📄 ${file.name}`
     };
 
-    setMessages(prev => [...prev, fileMsg]);
+    setMessages(prev => [...prev, userMsg]);
 
     const loadingId = Date.now() + 1;
 
@@ -206,20 +201,27 @@ function ChatPanel({ onFirstMessage }) {
     ]);
 
     setTimeout(() => {
+
       setMessages(prev =>
         prev.map(m =>
           m.id === loadingId
             ? {
                 ...m,
                 loading: false,
-                text: `File "${file.name}" uploaded successfully.`
+                text: `CSV file "${file.name}" uploaded successfully.`
               }
             : m
         )
       );
+
     }, 900);
 
     e.target.value = "";
+  };
+
+  const openCSVUpload = () => {
+    setMenuOpen(false);
+    fileInputRef.current?.click();
   };
 
   const theme = isDark ? "dark" : "light";
@@ -241,18 +243,75 @@ function ChatPanel({ onFirstMessage }) {
 
       <div className="chat-input-row">
 
-        <label className="chat-plus-btn" title="Upload file">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
+        {/* + MENU */}
+        <div style={{ position: "relative" }}>
 
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleUpload}
-          />
-        </label>
+          <button
+            className="chat-plus-btn"
+            onClick={() => setMenuOpen(prev => !prev)}
+          >
+            +
+          </button>
+
+          {menuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "40px",
+                left: "0",
+                background: "#1e1e1e",
+                border: "1px solid #333",
+                borderRadius: "6px",
+                padding: "6px 0",
+                width: "160px"
+              }}
+            >
+
+              <button
+                onClick={openCSVUpload}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  width: "100%",
+                  padding: "8px 12px",
+                  background: "none",
+                  border: "none",
+                  color: "#ccc",
+                  cursor: "pointer"
+                }}
+              >
+
+                {/* FILE ICON */}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+
+                Upload CSV
+
+              </button>
+
+            </div>
+          )}
+
+        </div>
+
+        {/* hidden input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          style={{ display: "none" }}
+          onChange={handleUpload}
+        />
 
         <input
           ref={inputRef}

@@ -52,7 +52,7 @@
 .dark  .chat-input-row { border-top: 1px solid #1e1e1e; }
 .light .chat-input-row { border-top: 1px solid #eeeeee; }
 
-/* ─── PLUS / UPLOAD BUTTON ─────────── */
+/* ─── PLUS BUTTON ───────── */
 .chat-plus-btn {
   display: flex;
   align-items: center;
@@ -62,6 +62,7 @@
   border-radius: 50%;
   cursor: pointer;
   flex-shrink: 0;
+  border: none;
   transition: background 0.2s, border-color 0.2s;
 }
 
@@ -92,7 +93,7 @@
 .dark  .chat-input::placeholder { color: #444444; }
 .light .chat-input::placeholder { color: #aaaaaa; }
 
-/* REMOVE BLUE BORDER ON FOCUS */
+/* remove blue outline */
 .chat-input:focus {
   outline: none;
 }
@@ -134,4 +135,111 @@
   .chat-header   { padding: 10px 12px; }
   .chat-input-row { padding: 8px; }
   .chat-input    { font-size: 12px; }
+}
+
+/* =====================================================
+   ATTACHMENT MENU (Upload CSV)
+===================================================== */
+
+.chat-attach-wrapper {
+  position: relative;
+}
+
+/* dropdown menu */
+.chat-attach-menu {
+  position: absolute;
+  bottom: 42px;
+  left: 0;
+
+  width: 180px;
+
+  border-radius: 8px;
+
+  padding: 8px 0;
+
+  z-index: 20;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+
+  animation: menuFade 0.18s ease;
+}
+
+.dark .chat-attach-menu {
+  background: #161616;
+  border: 1px solid #2a2a2a;
+}
+
+.light .chat-attach-menu {
+  background: #ffffff;
+  border: 1px solid #dddddd;
+}
+
+/* close button */
+.chat-attach-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+
+  border: none;
+  background: none;
+
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.dark .chat-attach-close { color: #aaa; }
+.light .chat-attach-close { color: #555; }
+
+.chat-attach-close:hover {
+  opacity: 1;
+}
+
+/* menu item */
+.chat-attach-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: none;
+  background: none;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition: background 0.15s;
+}
+
+.dark .chat-attach-item { color: #ccc; }
+.light .chat-attach-item { color: #333; }
+
+.dark .chat-attach-item:hover {
+  background: #242424;
+}
+
+.light .chat-attach-item:hover {
+  background: #f2f2f2;
+}
+
+/* icon */
+.chat-attach-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* animation */
+@keyframes menuFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
