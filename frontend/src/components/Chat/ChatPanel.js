@@ -14,13 +14,12 @@ function ChatPanel({ onFirstMessage }) {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-
   const [selectedFiles, setSelectedFiles] = useState([]);
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
-  const menuRef = useRef(null);   // NEW
+  const menuRef = useRef(null);
   const firstMessageSent = useRef(false);
 
   useEffect(() => {
@@ -54,7 +53,6 @@ function ChatPanel({ onFirstMessage }) {
       const tag = document.activeElement.tagName;
 
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       if (e.key.length === 1) {
@@ -111,17 +109,24 @@ function ChatPanel({ onFirstMessage }) {
   const sendMessage = async () => {
 
     const text = input.trim();
-    if (!text) return;
+    if (!text && selectedFiles.length === 0) return;
 
     if (!firstMessageSent.current) {
       firstMessageSent.current = true;
       onFirstMessage?.();
     }
 
-    const userMsg = { id: Date.now(), role: "user", text };
+    const userMsg = {
+      id: Date.now(),
+      role: "user",
+      text,
+      files: selectedFiles
+    };
 
     setMessages(prev => [...prev, userMsg]);
+
     setInput("");
+    setSelectedFiles([]);
 
     const loadingId = Date.now() + 1;
 
@@ -182,7 +187,7 @@ function ChatPanel({ onFirstMessage }) {
     if (e.key === "Enter") sendMessage();
   };
 
-  /* MULTIPLE CSV Upload */
+  /* FILE UPLOAD */
   const handleUpload = (e) => {
 
     const files = Array.from(e.target.files);
@@ -210,13 +215,17 @@ function ChatPanel({ onFirstMessage }) {
         return;
       }
 
-      validFiles.push(file);
+      validFiles.push({
+        file,
+        url: URL.createObjectURL(file)
+      });
 
     });
 
     setSelectedFiles(prev => [...prev, ...validFiles]);
 
     e.target.value = "";
+
   };
 
   const openCSVUpload = () => {
@@ -243,7 +252,7 @@ function ChatPanel({ onFirstMessage }) {
 
       {selectedFiles.length > 0 && (
         <div style={{ padding: "6px 12px" }}>
-          {selectedFiles.map((file, index) => (
+          {selectedFiles.map((item, index) => (
             <div
               key={index}
               style={{
@@ -253,7 +262,9 @@ function ChatPanel({ onFirstMessage }) {
                 marginBottom: "4px"
               }}
             >
-              <span>📄 {file.name}</span>
+              <span style={{ textDecoration: "underline" }}>
+                📄 {item.file.name}
+              </span>
 
               <button
                 onClick={() =>
@@ -277,7 +288,6 @@ function ChatPanel({ onFirstMessage }) {
 
       <div className="chat-input-row">
 
-        {/* + MENU */}
         <div ref={menuRef} style={{ position: "relative" }}>
 
           <button
