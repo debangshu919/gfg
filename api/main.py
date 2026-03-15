@@ -83,14 +83,17 @@ def chat(prompt: Chat):
                 "response": ai_response
             }
 
-        sql = tool_result.get("sql_query")
+        # Support both "sql_query" and "sql" keys from tools
+        sql = tool_result.get("sql_query") or tool_result.get("sql")
         # CASE — Insight agent result
         if "insights" in tool_result:
             return {
                 "success": True,
                 "type": "insight",
                 "prompt": prompt.message,
-                "response": tool_result["insights"]
+                "response": tool_result["insights"],
+                "sql_query": tool_result.get("sql_query") or tool_result.get("sql"),
+                "data": tool_result.get("data_sample") or tool_result.get("data")
                 }
         #  CASE 2 — Dataset cannot answer
         if not sql or sql == "null":
