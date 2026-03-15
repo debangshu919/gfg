@@ -33,7 +33,7 @@ class SQLResponse(BaseModel):
         default=None)
     
 # *************llm-models and prompts**************
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-4o")
 structured_llm = llm.with_structured_output(SQLResponse)
 
 template = load_prompt(r'agent\prompts\sql_gen_prompt.json')
@@ -182,5 +182,5 @@ def generate_sql_and_chart(question: str) -> dict:
          sql_query = fix_sql(sql_query, str(e), SCHEMA_CONTEXT)
 
 if __name__ == "__main__":
-   res = generate_sql_and_chart("Which region generated the highest average revenue per order in 2024?")
+   res = display_graph("Which region generated the highest average revenue per order in 2024?")
    print(res)
