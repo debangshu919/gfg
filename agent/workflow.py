@@ -8,7 +8,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.prompts import load_prompt
-from agent.tools.generate_sql_and_chart import sql_generator
+from agent.tools.generate_sql_and_chart import generate_sql_and_chart
 from agent.tools.fetch_db import fetch_data
 import uuid
 
@@ -18,7 +18,7 @@ load_dotenv()
 class chatstate(TypedDict):
    messages:Annotated[list[BaseMessage],add_messages]
 
-template = load_prompt(r'agent\prompts\main_agent_prompt.json')
+template = load_prompt('agent/prompts/main_agent_prompt.json')
 def chat_node(state:chatstate):
    msg = state["messages"]
    sys_prompt = SystemMessage(content=template.invoke({}).to_string())
@@ -33,7 +33,7 @@ def chat_node(state:chatstate):
 # *****************tools*******************
 
 tools =[
-    sql_generator,
+    generate_sql_and_chart,
     fetch_data
 ]
 tool_node = ToolNode(tools)

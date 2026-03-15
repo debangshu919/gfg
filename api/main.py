@@ -1,6 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from agent.csv_agent import analyze_csv_logic
+from fastapi import Form
+import pandas as pd
+import io
+import os
 from agent.main_agent import chatbot, config
 from langchain_core.messages import HumanMessage, ToolMessage
 import psycopg2
@@ -119,6 +124,22 @@ def chat(prompt: Chat):
     except Exception as e:
         print(str(e))
 
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+@app.post("/analyze")
+async def analyze_csv(prompt: str = Form(...), file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+        
+        # Use our new Agent to process CSV logic
+        return analyze_csv_logic(df, prompt)
+    except Exception as e:
+        print("Analyze CSV Error:", str(e))
         return {
             "success": False,
             "error": str(e)

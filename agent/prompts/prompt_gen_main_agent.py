@@ -133,4 +133,4 @@ Focus on delivering meaningful information and insights.
 
 )
 
-template.save(r'agent\prompts\main_agent_prompt.json')
+template.save('agent/prompts/main_agent_prompt.json')

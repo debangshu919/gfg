@@ -36,7 +36,7 @@ class SQLResponse(BaseModel):
 llm = ChatOpenAI(model="gpt-4o")
 structured_llm = llm.with_structured_output(SQLResponse)
 
-template = load_prompt(r'agent\prompts\sql_gen_prompt.json')
+template = load_prompt('agent/prompts/sql_gen_prompt.json')
 # *************get schema and sample of dataset**************
 def get_schema_and_samples():
    conn = psycopg2.connect(
