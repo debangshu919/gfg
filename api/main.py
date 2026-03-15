@@ -1,15 +1,15 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from agent.csv_agent import analyze_csv_logic
-from fastapi import Form
-import pandas as pd
 import io
-import os
-from agent.main_agent import chatbot, config
-from langchain_core.messages import HumanMessage, ToolMessage
-import psycopg2
 import json
+
+import pandas as pd
+import psycopg2
+from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from langchain_core.messages import HumanMessage, ToolMessage
+from pydantic import BaseModel
+
+from agent.csv_agent import analyze_csv_logic
+from agent.main_agent import chatbot, config
 
 app = FastAPI()
 
@@ -21,17 +21,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Chat(BaseModel):
     message: str
 
+
 def fetch_data(sql_query):
     conn = psycopg2.connect(
-      host="aws-1-ap-southeast-1.pooler.supabase.com",
-      database="postgres",
-      user="postgres.ddmzvulqgwojyfnswvif",
-      password="Soumyajit@185",
-      port=5432,
-      sslmode="require"
+        host="aws-1-ap-southeast-1.pooler.supabase.com",
+        database="postgres",
+        user="postgres.ddmzvulqgwojyfnswvif",
+        password="Soumyajit@185",
+        port=5432,
+        sslmode="require",
     )
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -41,12 +43,11 @@ def fetch_data(sql_query):
     conn.close()
     return columns, rows
 
+
 @app.get("/")
 def health():
-    return {
-        "success": True,
-        "message": "API is running"
-    }
+    return {"success": True, "message": "API is running"}
+
 
 @app.post("/chat")
 def chat(prompt: Chat):
@@ -54,8 +55,7 @@ def chat(prompt: Chat):
         print("Received message:", prompt.message)
 
         response = chatbot.invoke(
-            {"messages": [HumanMessage(content=prompt.message)]},
-            config=config
+            {"messages": [HumanMessage(content=prompt.message)]}, config=config
         )
 
         messages = response["messages"]
@@ -80,7 +80,7 @@ def chat(prompt: Chat):
                 "success": True,
                 "type": "chat",
                 "prompt": prompt.message,
-                "response": ai_response
+                "response": ai_response,
             }
 
         # Support both "sql_query" and "sql" keys from tools
@@ -93,16 +93,16 @@ def chat(prompt: Chat):
                 "prompt": prompt.message,
                 "response": tool_result["insights"],
                 "sql_query": tool_result.get("sql_query") or tool_result.get("sql"),
-                "data": tool_result.get("data_sample") or tool_result.get("data")
-                }
+                "data": tool_result.get("data_sample") or tool_result.get("data"),
+            }
         #  CASE 2 — Dataset cannot answer
         if not sql or sql == "null":
             return {
-            "success": True,
-            "type": "chat",
-            "prompt": prompt.message,
-            "response": ai_response
-        }
+                "success": True,
+                "type": "chat",
+                "prompt": prompt.message,
+                "response": ai_response,
+            }
 
         #  CASE 3 — Valid SQL query
         chart_type = tool_result["chart_type"]
@@ -121,16 +121,13 @@ def chat(prompt: Chat):
             "chart_type": chart_type,
             "x_axis": x_axis,
             "y_axis": y_axis,
-            "data": data
+            "data": data,
         }
 
     except Exception as e:
         print(str(e))
 
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 @app.post("/analyze")
@@ -138,12 +135,9 @@ async def analyze_csv(prompt: str = Form(...), file: UploadFile = File(...)):
     try:
         contents = await file.read()
         df = pd.read_csv(io.BytesIO(contents))
-        
+
         # Use our new Agent to process CSV logic
         return analyze_csv_logic(df, prompt)
     except Exception as e:
         print("Analyze CSV Error:", str(e))
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
