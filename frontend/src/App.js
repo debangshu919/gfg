@@ -7,12 +7,17 @@ import GraphPlaceholder from "./components/Graph/GraphPlaceholder";
 import ChatPanel from "./components/Chat/ChatPanel";
 
 function AppInner() {
+
   const { isDark } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 492);
+
   const [graphVisible, setGraphVisible] = useState(false);
+
+  /* GRAPH DATA STATE */
+  const [graphData, setGraphData] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 492);
@@ -20,8 +25,17 @@ function AppInner() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleOpen  = () => isMobile ? setMobileOpen(true)  : setSidebarOpen(true);
-  const handleClose = () => isMobile ? setMobileOpen(false) : setSidebarOpen(false);
+  const handleOpen = () =>
+    isMobile ? setMobileOpen(true) : setSidebarOpen(true);
+
+  const handleClose = () =>
+    isMobile ? setMobileOpen(false) : setSidebarOpen(false);
+
+  /* receive CSV from chat */
+  const handleGraphRequest = (payload) => {
+    setGraphData(payload);
+    setGraphVisible(true);
+  };
 
   return (
     <div className={`app-root ${isDark ? "dark" : "light"}`}>
@@ -54,14 +68,18 @@ function AppInner() {
           <div className={`content-area ${graphVisible ? "" : "no-graph"}`}>
 
             <div className={`graph-wrap ${graphVisible ? "" : "graph-hidden"}`}>
-              <GraphPlaceholder />
+              <GraphPlaceholder graphData={graphData} />
             </div>
 
             <div className={`chat-wrap ${graphVisible ? "" : "chat-expanded"}`}>
-              <ChatPanel onFirstMessage={() => setGraphVisible(true)} />
+              <ChatPanel
+                onFirstMessage={() => setGraphVisible(true)}
+                onGraphRequest={handleGraphRequest}
+              />
             </div>
 
           </div>
+
         </div>
       </div>
 

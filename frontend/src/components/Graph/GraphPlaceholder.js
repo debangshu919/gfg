@@ -1,68 +1,138 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import Plot from "react-plotly.js";
 import "./GraphPlaceholder.css";
 import { useTheme } from "../../context/ThemeContext";
-import { darkTheme, lightTheme } from "../../context/themes";
 
-const BARS   = [40, 65, 50, 80, 60, 90, 70, 55, 75, 85, 45, 95];
-const LINE   = [30, 50, 45, 70, 55, 80, 65, 60, 72, 78, 50, 88];
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const GRID   = [100, 75, 50, 25, 0];
+function GraphPlaceholder({ graphData }) {
 
-function GraphPlaceholder() {
   const { isDark } = useTheme();
-  const t = isDark ? darkTheme : lightTheme;
+
+  const [data, setData] = useState([]);
+  const [columns, setColumns] = useState([]);
+  const [xCol, setXCol] = useState("");
+  const [yCol, setYCol] = useState("");
+  const [chartType, setChartType] = useState("scatter");
+
+  useEffect(() => {
+    if (!graphData || !graphData.file) return;
+
+    const file = graphData.file;
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text = e.target?.result;
+      if (typeof text !== "string") return;
+
+      const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+      if (lines.length === 0) return;
+
+      const headerLine = lines[0];
+      const headers = headerLine.split(",");
+
+      const rows = lines.slice(1).map((line) => {
+        const values = line.split(",");
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = values[idx];
+        });
+        return row;
+      });
+
+      setData(rows);
+      setColumns(headers);
+
+      if (headers.length >= 2) {
+        setXCol(headers[0]);
+        setYCol(headers[1]);
+      }
+    };
+
+    reader.readAsText(file);
+  }, [graphData]);
+
+  const getChart = () => {
+
+    if (!xCol) return [];
+
+    const xData = data.map((d) => d[xCol]);
+    const yData = data.map((d) => d[yCol]);
+
+    if (chartType === "bar") {
+      return [{ type: "bar", x: xData, y: yData }];
+    }
+
+    if (chartType === "line") {
+      return [{ type: "scatter", mode: "lines", x: xData, y: yData }];
+    }
+
+    if (chartType === "scatter") {
+      return [{ type: "scatter", mode: "markers", x: xData, y: yData }];
+    }
+
+    if (chartType === "pie") {
+      return [{ type: "pie", labels: xData, values: yData }];
+    }
+
+    if (chartType === "histogram") {
+      return [{ type: "histogram", x: xData }];
+    }
+
+    return [];
+
+  };
 
   return (
     <div className={`graph-panel ${isDark ? "dark" : "light"}`}>
-      <svg width="100%" height="100%" viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet">
 
-        {/* Grid lines */}
-        {GRID.map((_, i) => (
-          <line key={i} x1="40" y1={20 + i * 50} x2="460" y2={20 + i * 50}
-            stroke={t.gridLine} strokeWidth="1" />
-        ))}
+      {!data.length && (
+        <div style={{ opacity: 0.6 }}>
+          Upload CSV or ask agent to generate a chart
+        </div>
+      )}
 
-        {/* Y labels */}
-        {GRID.map((val, i) => (
-          <text key={i} x="32" y={24 + i * 50}
-            fill={t.labelColor} fontSize="9" textAnchor="end">{val}</text>
-        ))}
+      {data.length > 0 && (
+        <>
+          <div style={{ marginBottom: 10 }}>
 
-        {/* Bars */}
-        {BARS.map((h, i) => {
-          const barH = (h / 100) * 200;
-          return (
-            <rect key={i} x={52 + i * 35} y={220 - barH}
-              width="18" height={barH}
-              fill={t.barFill} rx="2" opacity="0.9" />
-          );
-        })}
+            <label>X Column </label>
+            <select onChange={(e) => setXCol(e.target.value)} value={xCol}>
+              {columns.map((col) => (
+                <option key={col}>{col}</option>
+              ))}
+            </select>
 
-        {/* Line */}
-        <polyline
-          points={LINE.map((v, i) => `${61 + i * 35},${220 - (v / 100) * 200}`).join(" ")}
-          fill="none" stroke={t.accent} strokeWidth="2" strokeLinejoin="round"
-        />
+            <label style={{ marginLeft: 10 }}>Y Column </label>
+            <select onChange={(e) => setYCol(e.target.value)} value={yCol}>
+              {columns.map((col) => (
+                <option key={col}>{col}</option>
+              ))}
+            </select>
 
-        {/* Dots */}
-        {LINE.map((v, i) => (
-          <circle key={i}
-            cx={61 + i * 35} cy={220 - (v / 100) * 200}
-            r="3" fill={t.accent} stroke={t.bgSurface} strokeWidth="1.5"
+            <label style={{ marginLeft: 10 }}>Chart </label>
+            <select onChange={(e) => setChartType(e.target.value)}>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="scatter">Scatter</option>
+              <option value="pie">Pie</option>
+              <option value="histogram">Histogram</option>
+            </select>
+
+          </div>
+
+          <Plot
+            data={getChart()}
+            layout={{
+              autosize: true,
+              title: "Dynamic Chart",
+              paper_bgcolor: "transparent",
+              plot_bgcolor: "transparent"
+            }}
+            style={{ width: "100%", height: "100%" }}
           />
-        ))}
 
-        {/* X labels */}
-        {MONTHS.map((m, i) => (
-          <text key={i} x={61 + i * 35} y={238}
-            fill={t.labelColor} fontSize="8" textAnchor="middle">{m}</text>
-        ))}
+        </>
+      )}
 
-        {/* Title */}
-        <text x="240" y="256" fill={t.labelColor} fontSize="10" textAnchor="middle">
-          Monthly Performance Overview
-        </text>
-      </svg>
     </div>
   );
 }

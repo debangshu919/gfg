@@ -7,7 +7,7 @@ const initialMessages = [
   { id: 1, role: "assistant", loading: true }
 ];
 
-function ChatPanel({ onFirstMessage }) {
+function ChatPanel({ onFirstMessage, onGraphRequest }) {
 
   const { isDark } = useTheme();
 
@@ -30,11 +30,9 @@ function ChatPanel({ onFirstMessage }) {
   useEffect(() => {
 
     const handleClickOutside = (e) => {
-
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
-
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -124,6 +122,13 @@ function ChatPanel({ onFirstMessage }) {
     };
 
     setMessages(prev => [...prev, userMsg]);
+
+    /* send CSV to graph */
+    if (selectedFiles.length > 0 && onGraphRequest) {
+      onGraphRequest({
+        file: selectedFiles[0].file
+      });
+    }
 
     setInput("");
     setSelectedFiles([]);
@@ -334,8 +339,8 @@ function ChatPanel({ onFirstMessage }) {
                   stroke="currentColor"
                   strokeWidth="2"
                 >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
                 </svg>
 
                 Upload CSV
