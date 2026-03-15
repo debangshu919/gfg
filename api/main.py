@@ -47,7 +47,7 @@ def health():
 def chat(prompt: Chat):
     try:
         print("Received message:", prompt.message)
-        # Invoke the LangGraph chatbot — it decides whether to use tools
+
         response = chatbot.invoke(
             {"messages": [HumanMessage(content=prompt.message)]},
             config=config
@@ -56,47 +56,62 @@ def chat(prompt: Chat):
         messages = response["messages"]
         ai_response = messages[-1].content
 
-        # Check if sql_generator tool was called
         tool_result = None
+
         for msg in messages:
             if isinstance(msg, ToolMessage):
                 try:
                     parsed_msg = json.loads(msg.content)
+
                     if isinstance(parsed_msg, dict) and "sql_query" in parsed_msg:
                         tool_result = parsed_msg
+
                 except (json.JSONDecodeError, TypeError):
                     pass
 
-        if tool_result and "sql_query" in tool_result:
-            # Data query — fetch results and return with chart info
-            sql = tool_result["sql_query"]
-            chart_type = tool_result["chart_type"]
-            x_axis = tool_result.get("x_axis")
-            y_axis = tool_result.get("y_axis")
-
-            columns, rows = fetch_data(sql)
-            data = [dict(zip(columns, row)) for row in rows]
-
-            return {
-                "success": True,
-                "type": "data",
-                "prompt": prompt.message,
-                "response": ai_response,
-                "sql_query": sql,
-                "chart_type": chart_type,
-                "x_axis": x_axis,
-                "y_axis": y_axis,
-                "data": data
-            }
-        else:
-            # Normal chat — just return the conversational response
+        #  CASE 1 — No tool used (normal chat)
+        if not tool_result:
             return {
                 "success": True,
                 "type": "chat",
                 "prompt": prompt.message,
                 "response": ai_response
             }
+
+        sql = tool_result.get("sql_query")
+
+        #  CASE 2 — Dataset cannot answer
+        if not sql or sql == "null":
+            return {
+            "success": True,
+            "type": "chat",
+            "prompt": prompt.message,
+            "response": ai_response
+        }
+
+        #  CASE 3 — Valid SQL query
+        chart_type = tool_result["chart_type"]
+        x_axis = tool_result.get("x_axis")
+        y_axis = tool_result.get("y_axis")
+
+        columns, rows = fetch_data(sql)
+        data = [dict(zip(columns, row)) for row in rows]
+
+        return {
+            "success": True,
+            "type": "data",
+            "prompt": prompt.message,
+            "response": ai_response,
+            "sql_query": sql,
+            "chart_type": chart_type,
+            "x_axis": x_axis,
+            "y_axis": y_axis,
+            "data": data
+        }
+
     except Exception as e:
+        print(str(e))
+
         return {
             "success": False,
             "error": str(e)
