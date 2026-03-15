@@ -20,7 +20,7 @@ load_dotenv()
 class chatstate(TypedDict):
    messages:Annotated[list[BaseMessage],add_messages]
 
-template = load_prompt(r'agent\prompts\main_agent_prompt.json')
+template = load_prompt('agent/prompts/main_agent_prompt.json')
 def chat_node(state:chatstate):
    msg = state["messages"]
    sys_prompt = SystemMessage(content=template.invoke({}).to_string())

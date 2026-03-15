@@ -108,4 +108,4 @@ Expected output:
 
 )
 
-template.save(r'agent\prompts\sql_gen_prompt.json')
+template.save('agent/prompts/sql_gen_prompt.json')
