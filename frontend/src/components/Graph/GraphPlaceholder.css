@@ -1,40 +1,43 @@
-
 .graph-panel {
   flex: 1;
-  border-radius: 8px;
+  border-radius: 10px;
+
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+
   overflow: hidden;
+
   padding: 16px;
+
   height: 100%;
   width: 100%;
+
   transition: background 0.3s, border-color 0.3s;
 }
 
-.dark  .graph-panel { background: #111111; border: 1px solid #222222; }
-.light .graph-panel { background: #f0f0f0; border: 1px solid #e0e0e0; }
-
-/* ─── SVG fills its container ──── */
-.graph-panel svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+.dark .graph-panel {
+  background: #0f0f0f;
+  border: 1px solid #1f1f1f;
 }
 
-/* ─── RESPONSIVE ───────*/
+.light .graph-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.graph-panel .js-plotly-plot {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 @media (max-width: 768px) {
-  .graph-panel { padding: 12px; border-radius: 6px; }
+  .graph-panel {
+    padding: 12px;
+  }
 }
 
 @media (max-width: 492px) {
-  .graph-panel { padding: 8px; border-radius: 6px; }
-}
-
-@media (max-width: 430px) and (min-height: 800px) {
   .graph-panel {
-    padding: 12px;
-    border-radius: 8px;
-    height: 100%;
+    padding: 8px;
   }
 }
