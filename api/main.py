@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from agent.workflow import chatbot, config
+from agent.main_agent import chatbot, config
 from langchain_core.messages import HumanMessage, ToolMessage
 import psycopg2
 import json
@@ -58,12 +58,12 @@ def chat(prompt: Chat):
 
         tool_result = None
 
-        for msg in messages:
+        for msg in reversed(messages):
             if isinstance(msg, ToolMessage):
                 try:
                     parsed_msg = json.loads(msg.content)
 
-                    if isinstance(parsed_msg, dict) and "sql_query" in parsed_msg:
+                    if isinstance(parsed_msg, dict):
                         tool_result = parsed_msg
 
                 except (json.JSONDecodeError, TypeError):
@@ -79,7 +79,14 @@ def chat(prompt: Chat):
             }
 
         sql = tool_result.get("sql_query")
-
+        # CASE — Insight agent result
+        if "insights" in tool_result:
+            return {
+                "success": True,
+                "type": "insight",
+                "prompt": prompt.message,
+                "response": tool_result["insights"]
+                }
         #  CASE 2 — Dataset cannot answer
         if not sql or sql == "null":
             return {
