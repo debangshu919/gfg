@@ -14,14 +14,35 @@ function ChatPanel({ onFirstMessage }) {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const menuRef = useRef(null);
   const firstMessageSent = useRef(false);
 
   useEffect(() => {
     inputRef.current?.focus();
+  }, []);
+
+  /* close menu when clicking outside */
+  useEffect(() => {
+
+    const handleClickOutside = (e) => {
+
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+
   }, []);
 
   /* allow typing anywhere */
@@ -32,7 +53,6 @@ function ChatPanel({ onFirstMessage }) {
       const tag = document.activeElement.tagName;
 
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       if (e.key.length === 1) {
@@ -89,17 +109,24 @@ function ChatPanel({ onFirstMessage }) {
   const sendMessage = async () => {
 
     const text = input.trim();
-    if (!text) return;
+    if (!text && selectedFiles.length === 0) return;
 
     if (!firstMessageSent.current) {
       firstMessageSent.current = true;
       onFirstMessage?.();
     }
 
-    const userMsg = { id: Date.now(), role: "user", text };
+    const userMsg = {
+      id: Date.now(),
+      role: "user",
+      text,
+      files: selectedFiles
+    };
 
     setMessages(prev => [...prev, userMsg]);
+
     setInput("");
+    setSelectedFiles([]);
 
     const loadingId = Date.now() + 1;
 
@@ -160,63 +187,45 @@ function ChatPanel({ onFirstMessage }) {
     if (e.key === "Enter") sendMessage();
   };
 
-  /* CSV Upload with validation */
+  /* FILE UPLOAD */
   const handleUpload = (e) => {
 
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-    const isCSV =
-      file.type === "text/csv" ||
-      file.name.toLowerCase().endsWith(".csv");
+    const validFiles = [];
 
-    if (!isCSV) {
+    files.forEach(file => {
 
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          role: "assistant",
-          text: "⚠️ Invalid file. Please upload a CSV file only."
-        }
-      ]);
+      const isCSV =
+        file.type === "text/csv" ||
+        file.name.toLowerCase().endsWith(".csv");
 
-      e.target.value = "";
-      return;
-    }
+      if (!isCSV) {
 
-    const userMsg = {
-      id: Date.now(),
-      role: "user",
-      text: `📄 ${file.name}`
-    };
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now(),
+            role: "assistant",
+            text: "⚠️ Invalid file. Please upload a CSV file only."
+          }
+        ]);
 
-    setMessages(prev => [...prev, userMsg]);
+        return;
+      }
 
-    const loadingId = Date.now() + 1;
+      validFiles.push({
+        file,
+        url: URL.createObjectURL(file)
+      });
 
-    setMessages(prev => [
-      ...prev,
-      { id: loadingId, role: "assistant", loading: true }
-    ]);
+    });
 
-    setTimeout(() => {
-
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === loadingId
-            ? {
-                ...m,
-                loading: false,
-                text: `CSV file "${file.name}" uploaded successfully.`
-              }
-            : m
-        )
-      );
-
-    }, 900);
+    setSelectedFiles(prev => [...prev, ...validFiles]);
 
     e.target.value = "";
+
   };
 
   const openCSVUpload = () => {
@@ -241,10 +250,45 @@ function ChatPanel({ onFirstMessage }) {
 
       </div>
 
+      {selectedFiles.length > 0 && (
+        <div style={{ padding: "6px 12px" }}>
+          {selectedFiles.map((item, index) => (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "12px",
+                marginBottom: "4px"
+              }}
+            >
+              <span style={{ textDecoration: "underline" }}>
+                📄 {item.file.name}
+              </span>
+
+              <button
+                onClick={() =>
+                  setSelectedFiles(prev =>
+                    prev.filter((_, i) => i !== index)
+                  )
+                }
+                style={{
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  color: "#888"
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="chat-input-row">
 
-        {/* + MENU */}
-        <div style={{ position: "relative" }}>
+        <div ref={menuRef} style={{ position: "relative" }}>
 
           <button
             className="chat-plus-btn"
@@ -282,7 +326,6 @@ function ChatPanel({ onFirstMessage }) {
                 }}
               >
 
-                {/* FILE ICON */}
                 <svg
                   width="16"
                   height="16"
@@ -304,11 +347,11 @@ function ChatPanel({ onFirstMessage }) {
 
         </div>
 
-        {/* hidden input */}
         <input
           ref={fileInputRef}
           type="file"
           accept=".csv"
+          multiple
           style={{ display: "none" }}
           onChange={handleUpload}
         />

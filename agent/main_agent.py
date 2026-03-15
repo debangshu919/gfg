@@ -9,6 +9,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.prompts import load_prompt
 from agent.tools.generate_sql_and_chart import generate_sql_and_chart
+from agent.tools.get_schema import get_schema
+from agent.tools.insight_Tool import insight_agent
 from agent.tools.fetch_db import fetch_data
 import uuid
 
@@ -33,12 +35,14 @@ def chat_node(state:chatstate):
 # *****************tools*******************
 
 tools =[
-    generate_sql_and_chart,
-    fetch_data
+   generate_sql_and_chart,
+   get_schema,
+   insight_agent
+
 ]
 tool_node = ToolNode(tools)
 
-llm = ChatOpenAI(model="gpt-5-nano-2025-08-07").bind_tools(tools)
+llm = ChatOpenAI(model="gpt-4o",temperature=0.2).bind_tools(tools)
 
 graph = StateGraph(chatstate)
 graph.add_node("chat_node",chat_node)

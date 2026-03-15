@@ -33,7 +33,7 @@ class SQLResponse(BaseModel):
         default=None)
     
 # *************llm-models and prompts**************
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-4o")
 structured_llm = llm.with_structured_output(SQLResponse)
 
 template = load_prompt('agent/prompts/sql_gen_prompt.json')
@@ -91,12 +91,58 @@ SCHEMA_CONTEXT = get_schema_and_samples()
 
 # ************* Sql generator tool **************
 @tool
-def sql_generator(question: str) -> dict:
+def generate_sql_and_chart(question: str) -> dict:
    """
-   Generate SQL query from a user question using the database schema.
-   Returns JSON containing SQL query and recommended chart type.
-   """
-   print("Sql generator tool called")
+    Generate an SQL query and visualization metadata from a natural language question.
+
+    This tool analyzes a user's analytical question about the dataset and converts it
+    into a valid SQL query using the database schema. It also determines the most
+    appropriate chart type and axis configuration required to visualize the result.
+
+    The generated SQL query is NOT executed by this tool. Instead, the SQL query is
+    sent to the backend service, which executes the query against the database and
+    returns the resulting data. The backend then uses the provided visualization
+    metadata to render the chart for the user.
+
+    Parameters
+    ----------
+    question : str
+        The user's natural language query about the dataset.
+
+    Returns
+    -------
+    dict
+        A structured response containing:
+
+        - sql_query (str | None):
+            The generated SQL query. If the dataset cannot answer the question,
+            this value will be None.
+
+        - chart_type (str | None):
+            Recommended chart type for visualization. Possible values include:
+            "metric", "bar", "line", "pie", "scatter".
+
+        - x_axis (str | None):
+            Column name used for the x-axis in the visualization.
+
+        - y_axis (str | None):
+            Column name used for the y-axis in the visualization.
+
+        - display_chart (bool):
+            Indicates whether a chart should be rendered for the query result.
+
+        - message (str | None):
+            Explanation returned when the dataset cannot answer the user's question.
+
+    Notes
+    -----
+    - Only SELECT queries should be generated.
+    - The query must use only columns present in the database schema.
+    - If the question cannot be answered using the available schema,
+      sql_query must be None and an explanatory message should be returned.
+    """
+   
+   print("generate_sql_and_chart tool called")
    schema = SCHEMA_CONTEXT
    prompt = template.invoke({'question':question,'schema':schema})
    res = structured_llm.invoke(prompt)
@@ -136,5 +182,5 @@ def sql_generator(question: str) -> dict:
          sql_query = fix_sql(sql_query, str(e), SCHEMA_CONTEXT)
 
 if __name__ == "__main__":
-   res = sql_generator("Which region generated the highest average revenue per order in 2024?")
+   res = display_graph("Which region generated the highest average revenue per order in 2024?")
    print(res)
