@@ -8,18 +8,23 @@ from typing import Optional, Literal
 class CSVAnalyzeResponse(BaseModel):
     sql_query: Optional[str] = Field(
         description="PostgreSQL SELECT query written in a single line. Only use columns from the dataset.",
-        default=None)
+        default=None,
+    )
 
-    chart_type: Optional[Literal['metric', 'bar','line','pie','scatter']] = Field(
+    chart_type: Optional[
+        Literal["metric", "bar", "line", "pie", "area", "radar", "radial"]
+    ] = Field(
         description="Best chart type to visualize the query result",
-        default=None
-        )
+        default=None,
+    )
     x_axis: Optional[str] = Field(
         description="Column name used for x-axis if the chart requires it",
-        default=None)
+        default=None,
+    )
     y_axis: Optional[str] = Field(
         description="Column name used for y-axis if the chart requires it",
-        default=None)
+        default=None,
+    )
     message: Optional[str] = Field(
         description="Give error message if dataset does not contain information required to answer this question.",
         default=None)

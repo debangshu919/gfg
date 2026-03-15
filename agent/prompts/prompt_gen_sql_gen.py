@@ -57,18 +57,25 @@ If the user's question references columns or tables not present in the schema, e
 12. Avoid returning large raw datasets unless explicitly requested.
 
 CHART SELECTION RULES:
-Choose the chart type based on the query result:
-metric: Use when the result returns a single numeric value (e.g., total, average, count).
-bar: Use when comparing values across categories.
-line: Use when showing trends over time or ordered sequences.
-pie: Use when showing percentage or distribution of a total.
-scatter: Use when showing the relationship between two numeric variables.
+Choose the chart type based on the query result.
 
-metric → single numeric value
-bar → category comparison
-line → time series
-pie → distribution
-scatter → relationship between numeric variables
+You can choose one of the following chart types:
+- metric
+- bar
+- line
+- pie
+- area        (area chart)
+- radar       (radar chart)
+- radial      (radial / radial bar chart)
+
+Guidance:
+- metric: Use when the result returns a single numeric value (e.g., total, average, count).
+- bar: Use when comparing values across categories.
+- line: Use when showing trends over time or ordered sequences.
+- pie: Use when showing percentage or distribution of a total.
+- area: Use when showing cumulative trends over time with filled area under the line.
+- radar: Use when comparing multiple metrics across several categories on a radial axis.
+- radial: Use when showing proportional values in a circular / radial bar style chart.
 
 
 AXIS SELECTION RULES:

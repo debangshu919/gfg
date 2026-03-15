@@ -3,7 +3,7 @@ import "./App.css";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
-import GraphPlaceholder from "./components/Graph/GraphPlaceholder";
+import ChartRenderer from "./components/Graph/ChartRenderer";
 import ChatPanel from "./components/Chat/ChatPanel";
 
 function AppInner() {
@@ -68,7 +68,7 @@ function AppInner() {
           <div className={`content-area ${graphVisible ? "" : "no-graph"}`}>
 
             <div className={`graph-wrap ${graphVisible ? "" : "graph-hidden"}`}>
-              <GraphPlaceholder graphData={graphData} />
+              <ChartRenderer graphData={graphData} />
             </div>
 
             <div className={`chat-wrap ${graphVisible ? "" : "chat-expanded"}`}>

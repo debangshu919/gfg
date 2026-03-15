@@ -123,15 +123,49 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
 
     setMessages(prev => [...prev, userMsg]);
 
-    /* send CSV to graph */
+    /* Handle CSV upload with /analyze endpoint */
     if (selectedFiles.length > 0 && onGraphRequest) {
-      onGraphRequest({
-        file: selectedFiles[0].file
-      });
-    }
+      const formData = new FormData();
+      formData.append("prompt", text || "Analyze this data");
+      formData.append("file", selectedFiles[0].file);
 
-    setInput("");
-    setSelectedFiles([]);
+      try {
+        const res = await fetch("http://localhost:8000/analyze", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        
+        if (data.success && data.type === "data") {
+          // Pass API response to ChartRenderer
+          onGraphRequest({
+            apiResponse: data
+          });
+        } else {
+          // Handle error or chat response
+          const errorMsg = data.error || "Could not analyze the CSV";
+          setMessages(prev => [
+            ...prev,
+            {
+              id: Date.now() + 1,
+              role: "assistant",
+              text: `⚠️ ${errorMsg}`
+            }
+          ]);
+        }
+      } catch (err) {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            role: "assistant",
+            text: `⚠️ Error analyzing CSV: ${err.message}`
+          }
+        ]);
+      }
+      return; // Don't proceed to /chat if CSV was processed
+    }
 
     const loadingId = Date.now() + 1;
 
@@ -149,30 +183,60 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
       });
 
       const data = await res.json();
-      const response = data.response || "No response";
+      
+      if (data.success) {
+        if (data.type === "data") {
+          // Handle chart data from chat endpoint
+          onGraphRequest({
+            apiResponse: data
+          });
+          const response = data.response || "Chart generated successfully";
+          const words = response.split(" ");
+          let index = 0;
 
-      const words = response.split(" ");
-      let index = 0;
+          setTimeout(() => {
+            const interval = setInterval(() => {
+              index++;
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === loadingId
+                    ? { ...m, loading: false, text: words.slice(0, index).join(" ") }
+                    : m
+                )
+              );
+              if (index >= words.length) clearInterval(interval);
+            }, 50);
+          }, 800);
+        } else {
+          // Handle regular chat response
+          const response = data.response || "No response";
+          const words = response.split(" ");
+          let index = 0;
 
-      setTimeout(() => {
-
-        const interval = setInterval(() => {
-
-          index++;
-
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === loadingId
-                ? { ...m, loading: false, text: words.slice(0, index).join(" ") }
-                : m
-            )
-          );
-
-          if (index >= words.length) clearInterval(interval);
-
-        }, 50);
-
-      }, 800);
+          setTimeout(() => {
+            const interval = setInterval(() => {
+              index++;
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === loadingId
+                    ? { ...m, loading: false, text: words.slice(0, index).join(" ") }
+                    : m
+                )
+              );
+              if (index >= words.length) clearInterval(interval);
+            }, 50);
+          }, 800);
+        }
+      } else {
+        // Handle API error
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === loadingId
+              ? { ...m, loading: false, text: `⚠️ Error: ${data.error || "Unknown error"}` }
+              : m
+          )
+        );
+      }
 
     } catch (err) {
 
