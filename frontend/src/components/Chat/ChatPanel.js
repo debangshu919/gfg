@@ -77,7 +77,7 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
   useEffect(() => {
 
     const greeting =
-      "Hello! I'm your data assistant. Upload CSV or ask a question.";
+      "Hello! I'm your data assistant. Ask me anything about the graph.";
 
     const words = greeting.split(" ");
     let index = 0;
@@ -123,7 +123,7 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
 
     setMessages(prev => [...prev, userMsg]);
 
-    /* send CSV to graph if uploaded */
+    /* send CSV to graph */
     if (selectedFiles.length > 0 && onGraphRequest) {
       onGraphRequest({
         file: selectedFiles[0].file
@@ -149,22 +149,7 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
       });
 
       const data = await res.json();
-
-      /* BACKEND RETURNED CHART */
-      if (data.type === "data" && onGraphRequest) {
-
-        onGraphRequest({
-          rows: data.data,
-          xCol: data.x_axis,
-          yCol: data.y_axis,
-          chartType: data.chart_type
-        });
-
-      }
-
-      const response =
-        data.response ||
-        "Chart generated based on your request.";
+      const response = data.response || "No response";
 
       const words = response.split(" ");
       let index = 0;
@@ -354,8 +339,8 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
                   stroke="currentColor"
                   strokeWidth="2"
                 >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
                 </svg>
 
                 Upload CSV
