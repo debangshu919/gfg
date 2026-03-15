@@ -8,7 +8,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.prompts import load_prompt
-from agent.tools.sql_generator import sql_generator
+from agent.tools.generate_sql_and_chart import sql_generator
 from agent.tools.fetch_db import fetch_data
 import uuid
 
