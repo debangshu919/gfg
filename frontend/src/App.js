@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
 import ChartRenderer from "./components/Graph/ChartRenderer";
 import ChatPanel from "./components/Chat/ChatPanel";
+import LandingPage from "./components/landing/LandingPage";
 
-function AppInner() {
-
+function Dashboard() {
   const { isDark } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -39,7 +40,6 @@ function AppInner() {
 
   return (
     <div className={`app-root ${isDark ? "dark" : "light"}`}>
-
       {/* Mobile overlay */}
       <div
         className={`sidebar-overlay ${mobileOpen ? "visible" : ""}`}
@@ -58,7 +58,6 @@ function AppInner() {
       {/* Main Layout */}
       <div className="main-area">
         <div className="center-col">
-
           <Header
             sidebarOpen={isMobile ? mobileOpen : sidebarOpen}
             onOpenSidebar={handleOpen}
@@ -66,7 +65,6 @@ function AppInner() {
           />
 
           <div className={`content-area ${graphVisible ? "" : "no-graph"}`}>
-
             <div className={`graph-wrap ${graphVisible ? "" : "graph-hidden"}`}>
               <ChartRenderer graphData={graphData} />
             </div>
@@ -77,20 +75,40 @@ function AppInner() {
                 onGraphRequest={handleGraphRequest}
               />
             </div>
-
           </div>
-
         </div>
       </div>
-
     </div>
+  );
+}
+
+function AppContent() {
+  const { isDark } = useTheme();
+  
+  // Set global body class for dark mode on body based on context
+  useEffect(() => {
+    if (isDark) {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  }, [isDark]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
 function App() {
   return (
     <ThemeProvider>
-      <AppInner />
+      <AppContent />
     </ThemeProvider>
   );
 }
