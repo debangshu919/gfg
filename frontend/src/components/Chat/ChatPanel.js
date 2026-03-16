@@ -112,8 +112,10 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
 
     updateMessages(prev => [...prev, userMsg]);
 
-    /* Handle CSV upload */
     if (selectedFiles.length > 0 && onGraphRequest) {
+      const loadingId = Date.now() + 1;
+      updateMessages(prev => [...prev, { id: loadingId, role: "assistant", loading: true }]);
+
       const formData = new FormData();
       formData.append("prompt", text || "Analyze this data");
       formData.append("file", selectedFiles[0].file);
@@ -128,18 +130,42 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
 
         if (data.success && data.type === "data") {
           onGraphRequest({ apiResponse: data });
+          
+          const response = data.response || "Chart generated successfully";
+          const words = response.split(" ");
+          let index = 0;
+
+          setTimeout(() => {
+            const interval = setInterval(() => {
+              index++;
+              updateMessages(prev =>
+                prev.map(m =>
+                  m.id === loadingId
+                    ? { ...m, loading: false, text: words.slice(0, index).join(" ") }
+                    : m
+                )
+              );
+              if (index >= words.length) clearInterval(interval);
+            }, 50);
+          }, 800);
         } else {
           const errorMsg = data.error || "Could not analyze the CSV";
-          updateMessages(prev => [
-            ...prev,
-            { id: Date.now() + 1, role: "assistant", text: `⚠️ ${errorMsg}` }
-          ]);
+          updateMessages(prev =>
+            prev.map(m =>
+              m.id === loadingId
+                ? { ...m, loading: false, text: `⚠️ ${errorMsg}` }
+                : m
+            )
+          );
         }
       } catch (err) {
-        updateMessages(prev => [
-          ...prev,
-          { id: Date.now() + 1, role: "assistant", text: `⚠️ Error analyzing CSV: ${err.message}` }
-        ]);
+        updateMessages(prev =>
+          prev.map(m =>
+            m.id === loadingId
+              ? { ...m, loading: false, text: `⚠️ Error analyzing CSV: ${err.message}` }
+              : m
+          )
+        );
       }
       return;
     }
