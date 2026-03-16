@@ -1,5 +1,6 @@
 import io
 import json
+import uuid
 
 import pandas as pd
 import psycopg2
@@ -9,7 +10,7 @@ from langchain_core.messages import HumanMessage, ToolMessage
 from pydantic import BaseModel
 
 from agent.csv_agent import analyze_csv_logic
-from agent.main_agent import chatbot, config
+from agent.main_agent import chatbot
 
 app = FastAPI()
 
@@ -24,6 +25,7 @@ app.add_middleware(
 
 class Chat(BaseModel):
     message: str
+    thread_id: str | None = None
 
 
 def fetch_data(sql_query):
@@ -54,25 +56,44 @@ def chat(prompt: Chat):
     try:
         print("Received message:", prompt.message)
 
+        # Use a stable thread_id per client session (if provided)
+        # so you keep conversational context without sharing it
+        # across users or browser refreshes.
+        thread_id = prompt.thread_id or str(uuid.uuid4())
+        request_config = {"configurable": {"thread_id": thread_id}}
+
         response = chatbot.invoke(
-            {"messages": [HumanMessage(content=prompt.message)]}, config=config
+            {"messages": [HumanMessage(content=prompt.message)]},
+            config=request_config,
         )
 
         messages = response["messages"]
         ai_response = messages[-1].content
 
+        # Only consider tools that were invoked *after* the current
+        # user message in this turn. This avoids reusing an old
+        # ToolMessage from a previous question in the same thread.
         tool_result = None
 
-        for msg in reversed(messages):
-            if isinstance(msg, ToolMessage):
-                try:
-                    parsed_msg = json.loads(msg.content)
+        # Find the last HumanMessage matching the current prompt
+        # and only look for tools that occurred after it.
+        last_human_idx = None
+        for idx in range(len(messages) - 1, -1, -1):
+            msg = messages[idx]
+            if isinstance(msg, HumanMessage) and msg.content == prompt.message:
+                last_human_idx = idx
+                break
 
-                    if isinstance(parsed_msg, dict):
-                        tool_result = parsed_msg
-
-                except (json.JSONDecodeError, TypeError):
-                    pass
+        if last_human_idx is not None:
+            for msg in reversed(messages[last_human_idx + 1 :]):
+                if isinstance(msg, ToolMessage):
+                    try:
+                        parsed_msg = json.loads(msg.content)
+                        if isinstance(parsed_msg, dict):
+                            tool_result = parsed_msg
+                            break  # take the most recent tool for this turn
+                    except (json.JSONDecodeError, TypeError):
+                        continue
 
         #  CASE 1 — No tool used (normal chat)
         if not tool_result:
@@ -81,6 +102,7 @@ def chat(prompt: Chat):
                 "type": "chat",
                 "prompt": prompt.message,
                 "response": ai_response,
+                "thread_id": thread_id,
             }
 
         # Support both "sql_query" and "sql" keys from tools
@@ -94,6 +116,7 @@ def chat(prompt: Chat):
                 "response": tool_result["insights"],
                 "sql_query": tool_result.get("sql_query") or tool_result.get("sql"),
                 "data": tool_result.get("data_sample") or tool_result.get("data"),
+                "thread_id": thread_id,
             }
         #  CASE 2 — Dataset cannot answer
         if not sql or sql == "null":
@@ -102,6 +125,7 @@ def chat(prompt: Chat):
                 "type": "chat",
                 "prompt": prompt.message,
                 "response": ai_response,
+                "thread_id": thread_id,
             }
 
         #  CASE 3 — Valid SQL query
@@ -122,6 +146,7 @@ def chat(prompt: Chat):
             "x_axis": x_axis,
             "y_axis": y_axis,
             "data": data,
+            "thread_id": thread_id,
         }
 
     except Exception as e:
