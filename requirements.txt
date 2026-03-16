@@ -7,3 +7,4 @@ pandas>=3.0.1
 psycopg2-binary>=2.9.11
 python-multipart>=0.0.22
 uvicorn>=0.41.0
+ruff>=0.15.6

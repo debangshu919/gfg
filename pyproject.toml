@@ -13,5 +13,18 @@ dependencies = [
     "pandas>=3.0.1",
     "psycopg2-binary>=2.9.11",
     "python-multipart>=0.0.22",
+    "ruff>=0.15.6",
     "uvicorn>=0.41.0",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B905", "B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
