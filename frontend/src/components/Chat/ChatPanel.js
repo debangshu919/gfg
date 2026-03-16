@@ -109,6 +109,9 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
     const text = input.trim();
     if (!text && selectedFiles.length === 0) return;
 
+    setInput("");
+    setSelectedFiles([]);
+
     if (!firstMessageSent.current) {
       firstMessageSent.current = true;
       onFirstMessage?.();
