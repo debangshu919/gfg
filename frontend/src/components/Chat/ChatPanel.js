@@ -12,6 +12,7 @@ function ChatPanel({onGraphRequest }) {
   const { isDark } = useTheme();
 
   const [messages, setMessages] = useState(initialMessages);
+  const [threadId, setThreadId] = useState(null);
   const [input, setInput] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -177,10 +178,16 @@ function ChatPanel({onGraphRequest }) {
       const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, thread_id: threadId })
       });
 
       const data = await res.json();
+      
+      // Store thread_id from backend so future messages
+      // stay in the same LangGraph conversation.
+      if (data.thread_id && !threadId) {
+        setThreadId(data.thread_id);
+      }
       
       if (data.success) {
         if (data.type === "data") {
