@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -18,10 +21,15 @@
     "react-dom": "^19.2.4",
     "react-icons": "^5.6.0",
     "react-plotly.js": "^2.6.0",
+    "react-router-dom": "^7.13.1",
     "react-scripts": "^5.0.1",
     "recharts": "^3.8.0",
     "tailwind-merge": "^3.5.0",
+<<<<<<< HEAD
     "tailwindcss": "^3.4.19",
+=======
+    "tailwindcss-animate": "^1.0.7",
+>>>>>>> 749d927ffc33613f2c3ff375879f9f675a0e62c9
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -49,6 +57,13 @@
     ]
   },
   "devDependencies": {
+<<<<<<< HEAD
     "postcss": "^8.5.8"
+=======
+    "@tailwindcss/postcss": "^4.2.1",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1"
+>>>>>>> 749d927ffc33613f2c3ff375879f9f675a0e62c9
   }
 }

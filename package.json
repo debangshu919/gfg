@@ -9,7 +9,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+<<<<<<< HEAD
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1"
+=======
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.577.0",
+    "recharts": "^3.8.0",
+    "tailwind-merge": "^3.5.0"
+>>>>>>> 749d927ffc33613f2c3ff375879f9f675a0e62c9
   }
 }
