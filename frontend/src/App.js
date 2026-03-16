@@ -34,8 +34,10 @@ function Dashboard() {
 
   /* receive CSV from chat */
   const handleGraphRequest = (payload) => {
+     if (payload?.apiResponse?.type === "data"){
     setGraphData(payload);
     setGraphVisible(true);
+    }
   };
 
   return (

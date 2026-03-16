@@ -7,7 +7,7 @@ const initialMessages = [
   { id: 1, role: "assistant", loading: true }
 ];
 
-function ChatPanel({ onFirstMessage, onGraphRequest }) {
+function ChatPanel({onGraphRequest }) {
 
   const { isDark } = useTheme();
 
@@ -111,11 +111,6 @@ function ChatPanel({ onFirstMessage, onGraphRequest }) {
 
     setInput("");
     setSelectedFiles([]);
-
-    if (!firstMessageSent.current) {
-      firstMessageSent.current = true;
-      onFirstMessage?.();
-    }
 
     const userMsg = {
       id: Date.now(),
