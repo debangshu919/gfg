@@ -14,11 +14,13 @@ function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 492);
-
   const [graphVisible, setGraphVisible] = useState(false);
-
-  /* GRAPH DATA STATE */
   const [graphData, setGraphData] = useState(null);
+
+  const [sessions, setSessions] = useState([
+    { id: 1, title: "New Chat", messages: [] }
+  ]);
+  const [activeChatId, setActiveChatId] = useState(1);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 492);
@@ -32,32 +34,56 @@ function Dashboard() {
   const handleClose = () =>
     isMobile ? setMobileOpen(false) : setSidebarOpen(false);
 
-  /* receive CSV from chat */
+  const handleNewChat = () => {
+    const newId = Date.now();
+    setSessions(prev => [...prev, { id: newId, title: "New Chat", messages: [] }]);
+    setActiveChatId(newId);
+    setGraphVisible(false);
+    setGraphData(null);
+  };
+
+  const handleSelectChat = (id) => {
+    setActiveChatId(id);
+    setGraphVisible(false);
+    setGraphData(null);
+  };
+
+  const handleUpdateTitle = (id, title) => {
+    setSessions(prev =>
+      prev.map(s => s.id === id ? { ...s, title } : s)
+    );
+  };
+
+  const handleSaveMessages = (id, messages) => {
+    setSessions(prev =>
+      prev.map(s => s.id === id ? { ...s, messages } : s)
+    );
+  };
+
   const handleGraphRequest = (payload) => {
-     if (payload?.apiResponse?.type === "data"){
-    setGraphData(payload);
-    setGraphVisible(true);
+    if (payload?.apiResponse?.type === "data") {
+      setGraphData(payload);
+      setGraphVisible(true);
     }
   };
 
   return (
     <div className={`app-root ${isDark ? "dark" : "light"}`}>
-      {/* Mobile overlay */}
       <div
         className={`sidebar-overlay ${mobileOpen ? "visible" : ""}`}
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* Sidebar */}
-      <div className={`sidebar-wrap ${mobileOpen ? "sidebar-open" : ""}`}>
-        <Sidebar
-          isOpen={isMobile ? mobileOpen : sidebarOpen}
-          onOpen={handleOpen}
-          onClose={handleClose}
-        />
-      </div>
+      <Sidebar
+        isOpen={isMobile ? mobileOpen : sidebarOpen}
+        onOpen={handleOpen}
+        onClose={handleClose}
+        sessions={sessions}
+        activeChatId={activeChatId}
+        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+      />
 
-      {/* Main Layout */}
       <div className="main-area">
         <div className="center-col">
           <Header
@@ -73,8 +99,12 @@ function Dashboard() {
 
             <div className={`chat-wrap ${graphVisible ? "" : "chat-expanded"}`}>
               <ChatPanel
-                onFirstMessage={() => setGraphVisible(true)}
+                key={activeChatId}
+                activeChatId={activeChatId}
+                initialMessages={sessions.find(s => s.id === activeChatId)?.messages || []}
                 onGraphRequest={handleGraphRequest}
+                onUpdateTitle={handleUpdateTitle}
+                onSaveMessages={handleSaveMessages}
               />
             </div>
           </div>
@@ -86,8 +116,7 @@ function Dashboard() {
 
 function AppContent() {
   const { isDark } = useTheme();
-  
-  // Set global body class for dark mode on body based on context
+
   useEffect(() => {
     if (isDark) {
       document.body.classList.add("dark");
