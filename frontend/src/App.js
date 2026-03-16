@@ -35,12 +35,12 @@ function Dashboard() {
     isMobile ? setMobileOpen(false) : setSidebarOpen(false);
 
   const handleNewChat = () => {
-    const newId = Date.now();
-    setSessions(prev => [...prev, { id: newId, title: "New Chat", messages: [] }]);
-    setActiveChatId(newId);
-    setGraphVisible(false);
-    setGraphData(null);
-  };
+  const newId = Date.now();
+  setSessions(prev => [{ id: newId, title: "New Chat", messages: [] }, ...prev]); // 👈 add at start
+  setActiveChatId(newId);
+  setGraphVisible(false);
+  setGraphData(null);
+};
 
   const handleSelectChat = (id) => {
     setActiveChatId(id);
