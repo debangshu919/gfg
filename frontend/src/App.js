@@ -11,14 +11,14 @@ import LandingPage from "./components/landing/LandingPage";
 function Dashboard() {
   const { isDark } = useTheme();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 492);
+  const [sidebarOpen,  setSidebarOpen]  = useState(true);
+  const [mobileOpen,   setMobileOpen]   = useState(false);
+  const [isMobile,     setIsMobile]     = useState(window.innerWidth <= 492);
   const [graphVisible, setGraphVisible] = useState(false);
-  const [graphData, setGraphData] = useState(null);
+  const [graphData,    setGraphData]    = useState(null);
 
   const [sessions, setSessions] = useState([
-    { id: 1, title: "New Chat", messages: [] }
+    { id: 1, title: "New Chat", messages: [], graphData: null }
   ]);
   const [activeChatId, setActiveChatId] = useState(1);
 
@@ -28,24 +28,26 @@ function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleOpen = () =>
-    isMobile ? setMobileOpen(true) : setSidebarOpen(true);
-
-  const handleClose = () =>
-    isMobile ? setMobileOpen(false) : setSidebarOpen(false);
+  const handleOpen  = () => isMobile ? setMobileOpen(true)  : setSidebarOpen(true);
+  const handleClose = () => isMobile ? setMobileOpen(false) : setSidebarOpen(false);
 
   const handleNewChat = () => {
-  const newId = Date.now();
-  setSessions(prev => [{ id: newId, title: "New Chat", messages: [] }, ...prev]); // 👈 add at start
-  setActiveChatId(newId);
-  setGraphVisible(false);
-  setGraphData(null);
-};
+    const newId = Date.now();
+    setSessions(prev => [
+      { id: newId, title: "New Chat", messages: [], graphData: null },
+      ...prev
+    ]);
+    setActiveChatId(newId);
+    setGraphVisible(false);
+    setGraphData(null);
+  };
 
   const handleSelectChat = (id) => {
     setActiveChatId(id);
-    setGraphVisible(false);
-    setGraphData(null);
+    const session = sessions.find(s => s.id === id);
+    const restored = session?.graphData || null;
+    setGraphData(restored);
+    setGraphVisible(!!restored);
   };
 
   const handleUpdateTitle = (id, title) => {
@@ -60,32 +62,41 @@ function Dashboard() {
     );
   };
 
+  // ChatPanel always sends { apiResponse: data } — never a raw file
+  // so we just check apiResponse exists, no type gating
   const handleGraphRequest = (payload) => {
-    if (payload?.apiResponse?.type === "data") {
+    if (payload?.apiResponse) {
       setGraphData(payload);
       setGraphVisible(true);
+      setSessions(prev =>
+        prev.map(s => s.id === activeChatId ? { ...s, graphData: payload } : s)
+      );
     }
   };
 
   return (
     <div className={`app-root ${isDark ? "dark" : "light"}`}>
+
       <div
         className={`sidebar-overlay ${mobileOpen ? "visible" : ""}`}
         onClick={() => setMobileOpen(false)}
       />
-       <div className={`sidebar-wrap ${mobileOpen ? "sidebar-open" : ""}`}>
-      <Sidebar
-        isOpen={isMobile ? mobileOpen : sidebarOpen}
-        onOpen={handleOpen}
-        onClose={handleClose}
-        sessions={sessions}
-        activeChatId={activeChatId}
-        onNewChat={handleNewChat}
-        onSelectChat={handleSelectChat}
-      /></div>
+
+      <div className={`sidebar-wrap ${mobileOpen ? "sidebar-open" : ""}`}>
+        <Sidebar
+          isOpen={isMobile ? mobileOpen : sidebarOpen}
+          onOpen={handleOpen}
+          onClose={handleClose}
+          sessions={sessions}
+          activeChatId={activeChatId}
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+        />
+      </div>
 
       <div className="main-area">
         <div className="center-col">
+
           <Header
             sidebarOpen={isMobile ? mobileOpen : sidebarOpen}
             onOpenSidebar={handleOpen}
@@ -93,6 +104,7 @@ function Dashboard() {
           />
 
           <div className={`content-area ${graphVisible ? "" : "no-graph"}`}>
+
             <div className={`graph-wrap ${graphVisible ? "" : "graph-hidden"}`}>
               <ChartRenderer graphData={graphData} />
             </div>
@@ -107,9 +119,11 @@ function Dashboard() {
                 onSaveMessages={handleSaveMessages}
               />
             </div>
+
           </div>
         </div>
       </div>
+
     </div>
   );
 }
@@ -128,9 +142,9 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/"          element={<LandingPage />} />
+        <Route path="/dashboard" element={<Dashboard />}   />
+        <Route path="*"          element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
