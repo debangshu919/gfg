@@ -244,6 +244,11 @@ const CustomPieChart = ({ data, x_axis, y_axis, isDark }) => {
       <svg width={chartWidth} height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
         {data.map((d, i) => {
           const value = Number(d[y_axis]) || 0;
+          const rawLabel = d[x_axis] ?? "";
+          const label =
+            typeof rawLabel === "string"
+              ? rawLabel.replace(/^\s*\d+[\).\-\:]*\s*/, "")
+              : rawLabel;
           const percentage = value / total;
           const angle = percentage * Math.PI * 2;
           const endAngle = currentAngle + angle;
@@ -340,7 +345,7 @@ const CustomPieChart = ({ data, x_axis, y_axis, isDark }) => {
                     fontSize="11"
                     fontWeight="bold"
                   >
-                    {d[x_axis]}
+                    {label}
                   </text>
                   <text
                     x={tooltipX}
@@ -370,50 +375,6 @@ const CustomPieChart = ({ data, x_axis, y_axis, isDark }) => {
             </g>
           );
         })}
-        
-        {/* Legend */}
-        <g transform={`translate(0, ${chartHeight - 30})`}>
-          {data.map((d, i) => {
-            const legendX = (i * (chartWidth / data.length)) + (chartWidth / data.length / 2);
-            const value = Number(d[y_axis]) || 0;
-            const percentage = (value / total) * 100;
-            
-            return (
-              <g key={`legend-${i}`}>
-                <rect
-                  x={legendX - 40}
-                  y={0}
-                  width="12"
-                  height="12"
-                  fill={CHART_COLORS[i % CHART_COLORS.length]}
-                  rx="2"
-                />
-                <text
-                  x={legendX - 25}
-                  y={9}
-                  fill={isDark ? "#ccc" : "#666"}
-                  fontSize="10"
-                  textAnchor="start"
-                >
-                  {d[x_axis].length > 15 
-                    ? `${d[x_axis].substring(0, 12)}...`
-                    : d[x_axis]
-                  }
-                </text>
-                <text
-                  x={legendX + 60}
-                  y={9}
-                  fill={isDark ? "#ccc" : "#666"}
-                  fontSize="9"
-                  textAnchor="start"
-                  fontWeight="bold"
-                >
-                  {`${percentage.toFixed(1)}%`}
-                </text>
-              </g>
-            );
-          })}
-        </g>
       </svg>
     </div>
   );
