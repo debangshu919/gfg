@@ -73,7 +73,7 @@ function Dashboard() {
         className={`sidebar-overlay ${mobileOpen ? "visible" : ""}`}
         onClick={() => setMobileOpen(false)}
       />
-
+       <div className={`sidebar-wrap ${mobileOpen ? "sidebar-open" : ""}`}>
       <Sidebar
         isOpen={isMobile ? mobileOpen : sidebarOpen}
         onOpen={handleOpen}
@@ -82,7 +82,7 @@ function Dashboard() {
         activeChatId={activeChatId}
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
-      />
+      /></div>
 
       <div className="main-area">
         <div className="center-col">
