@@ -83,5 +83,5 @@ export const downloadReport = async ({ question, aiResponse, chartRef }) => {
   pdf.text("AI Analysis Report — Confidential", margin, 290);
   pdf.text("Page 1", pageWidth - margin, 290, { align: "right" });
 
-  pdf.save(`dashboard-report-${Date.now()}.pdf`);
+  pdf.save(`AI-report-${Date.now()}.pdf`);
 };
