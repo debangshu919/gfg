@@ -1,0 +1,265 @@
+/* ─── SQL DISPLAY COMPONENT ─────────────────────────────────── */
+.sql-display {
+  border-top: 1px solid;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.sql-display.dark {
+  border-color: #1a1a1a;
+  background: #0a0a0a;
+}
+
+.sql-display.light {
+  border-color: #f0f0f0;
+  background: #fafafa;
+}
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+.sql-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sql-header:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.sql-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sql-icon {
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sql-title {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.sql-display.dark .sql-title {
+  color: #888;
+}
+
+.sql-display.light .sql-title {
+  color: #555;
+}
+
+.sql-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #3b82f6;
+  color: white;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sql-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.sql-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.2s;
+}
+
+.sql-copy-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+}
+
+.sql-display.dark .sql-copy-btn {
+  color: #888;
+  border-color: #2a2a2a;
+}
+
+.sql-display.light .sql-copy-btn {
+  color: #666;
+  border-color: #ddd;
+}
+
+.sql-copy-btn:hover {
+  color: #3b82f6;
+}
+
+.copy-text {
+  font-size: 10px;
+}
+
+/* ─── CONTENT ──────────────────────────────────────────────── */
+.sql-content {
+  overflow: hidden;
+}
+
+.sql-content-inner {
+  padding: 0 16px 16px;
+}
+
+/* ─── SQL CODE ─────────────────────────────────────────────── */
+.sql-code-container {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid;
+  margin-bottom: 12px;
+}
+
+.sql-display.dark .sql-code-container {
+  background: #111;
+  border-color: #2a2a2a;
+}
+
+.sql-display.light .sql-code-container {
+  background: #f8f8f8;
+  border-color: #e5e5e5;
+}
+
+.sql-code {
+  padding: 12px;
+  margin: 0;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.sql-display.dark .sql-code {
+  color: #ccc;
+}
+
+.sql-display.light .sql-code {
+  color: #333;
+}
+
+/* ─── SYNTAX HIGHLIGHTING ─────────────────────────────────── */
+.sql-keyword {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.sql-string {
+  color: #10b981;
+}
+
+.sql-number {
+  color: #f59e0b;
+}
+
+.sql-comment {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ─── EXPLANATION SECTION ─────────────────────────────────── */
+.sql-explanation-section {
+  border-top: 1px solid;
+  padding-top: 12px;
+}
+
+.sql-display.dark .sql-explanation-section {
+  border-color: #2a2a2a;
+}
+
+.sql-display.light .sql-explanation-section {
+  border-color: #e5e5e5;
+}
+
+.sql-explanation-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.sql-explanation-toggle:hover {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: #3b82f6;
+}
+
+.sql-display.dark .sql-explanation-toggle {
+  color: #888;
+  border-color: #2a2a2a;
+}
+
+.sql-display.light .sql-explanation-toggle {
+  color: #666;
+  border-color: #ddd;
+}
+
+.explanation-arrow {
+  transition: transform 0.2s;
+}
+
+.sql-explanation {
+  overflow: hidden;
+}
+
+.explanation-content {
+  padding: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.sql-display.dark .explanation-content {
+  color: #aaa;
+}
+
+.sql-display.light .explanation-content {
+  color: #555;
+}
+
+/* ─── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .sql-header {
+    padding: 10px 12px;
+  }
+  
+  .sql-content-inner {
+    padding: 0 12px 12px;
+  }
+  
+  .sql-code {
+    padding: 10px;
+    font-size: 10px;
+  }
+  
+  .copy-text {
+    display: none;
+  }
+}

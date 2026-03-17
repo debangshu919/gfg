@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
+import SQLDisplay from "./SQLDisplay";
 import "./GraphPlaceholder.css";
 
 const PALETTE = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316"];
@@ -497,7 +498,7 @@ function ChartRenderer({ graphData, chartRef }) {
     );
   }
 
-  const { data, chart_type, x_axis, y_axis } = chartData;
+  const { data, chart_type, x_axis, y_axis, sql_query } = chartData;
 
   return (
     <div ref={chartRef} className={`graph-panel ${isDark ? "dark" : "light"}`}>
@@ -512,6 +513,7 @@ function ChartRenderer({ graphData, chartRef }) {
           </motion.div>
         </AnimatePresence>
       </div>
+      <SQLDisplay sqlQuery={sql_query} isDark={isDark} />
     </div>
   );
 }
