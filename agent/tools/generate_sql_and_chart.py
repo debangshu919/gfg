@@ -18,7 +18,7 @@ class SQLResponse(BaseModel):
         description="PostgreSQL SELECT query written in a single line. Only use columns from the dataset.",
         default=None)
 
-    chart_type: Optional[Literal['metric', 'bar','line','pie','scatter']] = Field(
+    chart_type: Optional[Literal['metric', 'bar','line','pie','scatter', 'histogram']] = Field(
         description="Best chart type to visualize the query result",
         default=None
         )

@@ -12,7 +12,7 @@ class CSVAnalyzeResponse(BaseModel):
     )
 
     chart_type: Optional[
-        Literal["metric", "bar", "line", "pie", "area", "radar", "radial"]
+        Literal['metric', 'bar','line','pie','scatter', 'histogram']
     ] = Field(
         description="Best chart type to visualize the query result",
         default=None,
