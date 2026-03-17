@@ -1,6 +1,7 @@
 import React from "react";
 import "./ChatMessage.css";
 import { useTheme } from "../../context/ThemeContext";
+import ReactMarkdown from "react-markdown";
 
 function ChatMessage({ message }) {
 
@@ -48,7 +49,7 @@ function ChatMessage({ message }) {
             )}
 
             {/* MESSAGE TEXT */}
-            {message.text}
+            <ReactMarkdown>{message.text}</ReactMarkdown>
 
           </>
         )}

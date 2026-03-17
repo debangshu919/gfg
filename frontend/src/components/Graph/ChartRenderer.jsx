@@ -14,7 +14,6 @@ const fmt = (v) => {
   return n % 1 === 0 ? n.toLocaleString() : n.toFixed(2);
 };
 
-/* ─── AXIS LABELS ────────────────────────────────────────── */
 const AxisLabels = ({ W, H, PAD, pw, ph, xLabel, yLabel, isDark }) => (
   <>
     <text x={PAD.left + pw / 2} y={H - 4}
@@ -33,7 +32,6 @@ const AxisLabels = ({ W, H, PAD, pw, ph, xLabel, yLabel, isDark }) => (
   </>
 );
 
-/* ─── BAR ────────────────────────────────────────────────── */
 const BarChart = ({ data, x_axis, y_axis, isDark }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 100, left: 80 };
@@ -101,14 +99,12 @@ const BarChart = ({ data, x_axis, y_axis, isDark }) => {
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
       <line x1={PAD.left} y1={PAD.top + ph} x2={PAD.left + pw} y2={PAD.top + ph}
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
-
       <AxisLabels W={W} H={H} PAD={PAD} pw={pw} ph={ph}
         xLabel={x_axis} yLabel={y_axis} isDark={isDark} />
     </svg>
   );
 };
 
-/* ─── LINE ───────────────────────────────────────────────── */
 const LineChart = ({ data, x_axis, y_axis, isDark }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 100, left: 80 };
@@ -188,14 +184,12 @@ const LineChart = ({ data, x_axis, y_axis, isDark }) => {
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
       <line x1={PAD.left} y1={PAD.top + ph} x2={PAD.left + pw} y2={PAD.top + ph}
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
-
       <AxisLabels W={W} H={H} PAD={PAD} pw={pw} ph={ph}
         xLabel={x_axis} yLabel={y_axis} isDark={isDark} />
     </svg>
   );
 };
 
-/* ─── PIE ────────────────────────────────────────────────── */
 const PieChart = ({ data, x_axis, y_axis, isDark }) => {
   const [hovered, setHovered] = useState(null);
   const W = 480, H = 400, cx = 190, cy = H / 2, r = 130;
@@ -267,7 +261,6 @@ const PieChart = ({ data, x_axis, y_axis, isDark }) => {
   );
 };
 
-/* ─── SCATTER ────────────────────────────────────────────── */
 const ScatterChart = ({ data, x_axis, y_axis, isDark }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 80, left: 80 };
@@ -325,14 +318,12 @@ const ScatterChart = ({ data, x_axis, y_axis, isDark }) => {
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
       <line x1={PAD.left} y1={PAD.top + ph} x2={PAD.left + pw} y2={PAD.top + ph}
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
-
       <AxisLabels W={W} H={H} PAD={PAD} pw={pw} ph={ph}
         xLabel={x_axis} yLabel={y_axis} isDark={isDark} />
     </svg>
   );
 };
 
-/* ─── HISTOGRAM ──────────────────────────────────────────── */
 const HistogramChart = ({ data, x_axis, isDark, bins = 10 }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 100, left: 80 };
@@ -419,14 +410,12 @@ const HistogramChart = ({ data, x_axis, isDark, bins = 10 }) => {
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
       <line x1={PAD.left} y1={PAD.top + ph} x2={PAD.left + pw} y2={PAD.top + ph}
         stroke={isDark ? "#2a2a2a" : "#e0e0e0"} strokeWidth="1" />
-
       <AxisLabels W={W} H={H} PAD={PAD} pw={pw} ph={ph}
         xLabel={x_axis} yLabel="frequency" isDark={isDark} />
     </svg>
   );
 };
 
-/* ─── METRIC ─────────────────────────────────────────────── */
 const MetricCard = ({ data, y_axis, isDark }) => {
   const first = data[0];
   const value = first ? (first[y_axis] ?? Object.values(first)[0]) : "N/A";
@@ -455,7 +444,6 @@ const MetricCard = ({ data, y_axis, isDark }) => {
   );
 };
 
-/* ─── EMPTY STATE ────────────────────────────────────────── */
 const EmptyState = () => (
   <motion.div className="empty-state"
     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -474,7 +462,6 @@ const EmptyState = () => (
   </motion.div>
 );
 
-/* ─── RESOLVE CHART ──────────────────────────────────────── */
 const resolveChart = (type, data, x_axis, y_axis, isDark) => {
   const props = { data, x_axis, y_axis, isDark };
   switch (type) {
@@ -490,8 +477,8 @@ const resolveChart = (type, data, x_axis, y_axis, isDark) => {
   }
 };
 
-/* ─── MAIN ───────────────────────────────────────────────── */
-function ChartRenderer({ graphData }) {
+// ─── MAIN — only this function changed ───────────────────────
+function ChartRenderer({ graphData, chartRef }) {
   const { isDark } = useTheme();
   const [chartData, setChartData] = useState(null);
   const [chartKey,  setChartKey]  = useState(0);
@@ -504,7 +491,7 @@ function ChartRenderer({ graphData }) {
 
   if (!chartData?.data?.length) {
     return (
-      <div className={`graph-panel ${isDark ? "dark" : "light"}`}>
+      <div ref={chartRef} className={`graph-panel ${isDark ? "dark" : "light"}`}>
         <EmptyState />
       </div>
     );
@@ -513,7 +500,7 @@ function ChartRenderer({ graphData }) {
   const { data, chart_type, x_axis, y_axis } = chartData;
 
   return (
-    <div className={`graph-panel ${isDark ? "dark" : "light"}`}>
+    <div ref={chartRef} className={`graph-panel ${isDark ? "dark" : "light"}`}>
       <div className="chart-area">
         <AnimatePresence mode="wait">
           <motion.div key={chartKey} className="chart-motion-wrap"

@@ -3,7 +3,7 @@ import "./ChatPanel.css";
 import ChatMessage from "./ChatMessage";
 import { useTheme } from "../../context/ThemeContext";
 
-function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages, initialMessages }) {
+function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages, initialMessages, onReportData }) {
 
   const { isDark } = useTheme();
 
@@ -23,7 +23,6 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
   const menuRef = useRef(null);
   const titleUpdated = useRef(false);
 
-  // helper — updates local state AND syncs to parent
   const updateMessages = (updater) => {
     setMessages(prev => {
       const next = typeof updater === "function" ? updater(prev) : updater;
@@ -65,9 +64,8 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* greeting — only for brand new chats */
   useEffect(() => {
-    if (initialMessages?.length > 0) return;  // skip if restoring old chat
+    if (initialMessages?.length > 0) return;
 
     const greeting = "Hello! I'm your data assistant. Ask me anything about the graph.";
     const words = greeting.split(" ");
@@ -96,7 +94,6 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
     setInput("");
     setSelectedFiles([]);
 
-    // auto-title from first message
     if (!titleUpdated.current && text) {
       titleUpdated.current = true;
       const title = text.length > 28 ? text.slice(0, 28) + "…" : text;
@@ -112,6 +109,7 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
 
     updateMessages(prev => [...prev, userMsg]);
 
+    // ── CSV upload flow ──────────────────────────────────────
     if (selectedFiles.length > 0 && onGraphRequest) {
       const loadingId = Date.now() + 1;
       updateMessages(prev => [...prev, { id: loadingId, role: "assistant", loading: true }]);
@@ -130,7 +128,12 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
 
         if (data.success && data.type === "data") {
           onGraphRequest({ apiResponse: data });
-          
+
+          // ← send report data up
+          if (onReportData && text) {
+            onReportData({ question: text, response: data.response || "" });
+          }
+
           const response = data.response || "Chart generated successfully";
           const words = response.split(" ");
           let index = 0;
@@ -148,6 +151,7 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
               if (index >= words.length) clearInterval(interval);
             }, 50);
           }, 800);
+
         } else {
           const errorMsg = data.error || "Could not analyze the CSV";
           updateMessages(prev =>
@@ -170,6 +174,7 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
       return;
     }
 
+    // ── Chat flow ────────────────────────────────────────────
     const loadingId = Date.now() + 1;
     updateMessages(prev => [...prev, { id: loadingId, role: "assistant", loading: true }]);
 
@@ -189,6 +194,11 @@ function ChatPanel({ activeChatId, onGraphRequest, onUpdateTitle, onSaveMessages
       if (data.success) {
         if (data.type === "data") {
           onGraphRequest({ apiResponse: data });
+        }
+
+        // ← send report data up
+        if (onReportData && text) {
+          onReportData({ question: text, response: data.response || "" });
         }
 
         const response = data.type === "data"

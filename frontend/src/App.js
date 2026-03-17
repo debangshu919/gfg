@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
@@ -7,6 +7,7 @@ import Header from "./components/Header/Header";
 import ChartRenderer from "./components/Graph/ChartRenderer";
 import ChatPanel from "./components/Chat/ChatPanel";
 import LandingPage from "./components/landing/LandingPage";
+import { downloadReport } from "./lib/utils";
 
 function Dashboard() {
   const { isDark } = useTheme();
@@ -16,6 +17,10 @@ function Dashboard() {
   const [isMobile,     setIsMobile]     = useState(window.innerWidth <= 492);
   const [graphVisible, setGraphVisible] = useState(false);
   const [graphData,    setGraphData]    = useState(null);
+  const [lastQuestion, setLastQuestion] = useState("");
+  const [lastResponse, setLastResponse] = useState("");
+
+  const chartRef = useRef(null);
 
   const [sessions, setSessions] = useState([
     { id: 1, title: "New Chat", messages: [], graphData: null }
@@ -40,6 +45,8 @@ function Dashboard() {
     setActiveChatId(newId);
     setGraphVisible(false);
     setGraphData(null);
+    setLastQuestion("");
+    setLastResponse("");
   };
 
   const handleSelectChat = (id) => {
@@ -62,8 +69,6 @@ function Dashboard() {
     );
   };
 
-  // ChatPanel always sends { apiResponse: data } — never a raw file
-  // so we just check apiResponse exists, no type gating
   const handleGraphRequest = (payload) => {
     if (payload?.apiResponse) {
       setGraphData(payload);
@@ -72,6 +77,19 @@ function Dashboard() {
         prev.map(s => s.id === activeChatId ? { ...s, graphData: payload } : s)
       );
     }
+  };
+
+  const handleReportData = ({ question, response }) => {
+    setLastQuestion(question);
+    setLastResponse(response);
+  };
+
+  const handleDownload = () => {
+    downloadReport({
+      question: lastQuestion,
+      aiResponse: lastResponse,
+      chartRef,
+    });
   };
 
   return (
@@ -101,12 +119,13 @@ function Dashboard() {
             sidebarOpen={isMobile ? mobileOpen : sidebarOpen}
             onOpenSidebar={handleOpen}
             graphVisible={graphVisible}
+            onDownload={graphVisible ? handleDownload : null}
           />
 
           <div className={`content-area ${graphVisible ? "" : "no-graph"}`}>
 
             <div className={`graph-wrap ${graphVisible ? "" : "graph-hidden"}`}>
-              <ChartRenderer graphData={graphData} />
+              <ChartRenderer graphData={graphData} chartRef={chartRef} />
             </div>
 
             <div className={`chat-wrap ${graphVisible ? "" : "chat-expanded"}`}>
@@ -117,6 +136,7 @@ function Dashboard() {
                 onGraphRequest={handleGraphRequest}
                 onUpdateTitle={handleUpdateTitle}
                 onSaveMessages={handleSaveMessages}
+                onReportData={handleReportData}
               />
             </div>
 
