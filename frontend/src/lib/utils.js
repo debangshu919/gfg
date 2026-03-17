@@ -19,7 +19,7 @@ export const downloadReport = async ({ question, aiResponse, chartRef }) => {
   pdf.setTextColor(59, 130, 246);
   pdf.setFontSize(18);
   pdf.setFont("helvetica", "bold");
-  pdf.text("Dashboard AI", margin, 18);
+  pdf.text("AI Analysis Report", margin, 18);
   pdf.setTextColor(150, 150, 150);
   pdf.setFontSize(9);
   pdf.setFont("helvetica", "normal");
@@ -80,7 +80,7 @@ export const downloadReport = async ({ question, aiResponse, chartRef }) => {
   pdf.line(margin, 285, pageWidth - margin, 285);
   pdf.setTextColor(80, 80, 80);
   pdf.setFontSize(8);
-  pdf.text("Dashboard AI — Confidential Report", margin, 290);
+  pdf.text("AI Analysis Report — Confidential", margin, 290);
   pdf.text("Page 1", pageWidth - margin, 290, { align: "right" });
 
   pdf.save(`dashboard-report-${Date.now()}.pdf`);
