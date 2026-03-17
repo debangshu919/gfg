@@ -10,28 +10,28 @@ export default function FeaturesSection() {
       description: "Visualize trends and patterns instantly. Ask for a bar chart of sales by region, or a line graph of user signups over time.",
       icon: <BarChart className="w-8 h-8 text-blue-500" />,
       colSpan: "md:col-span-2",
-      bgClass: "bg-blue-50 dark:bg-blue-950/20"
+      bgClass: "bg-blue-500/5 border-blue-500/10"
     },
     {
       title: "Natural Language to SQL",
-      description: "No need to write complex JOINs. Simply ask questions in plain English and let PromptBI generate and execute the perfect SQL query.",
+      description: "No need to write complex JOINs. Simply ask questions in plain English.",
       icon: <Terminal className="w-8 h-8 text-indigo-500" />,
       colSpan: "md:col-span-1",
-      bgClass: "bg-indigo-50 dark:bg-indigo-950/20"
+      bgClass: "bg-indigo-500/5 border-indigo-500/10"
     },
     {
       title: "Seamless DB Integration",
-      description: "Connect safely to your PostgreSQL, MySQL, or cloud databases with a few clicks. Your credentials are fully encrypted.",
+      description: "Connect safely to your databases with a few clicks. Your credentials are fully encrypted.",
       icon: <Database className="w-8 h-8 text-green-500" />,
       colSpan: "md:col-span-1",
-      bgClass: "bg-green-50 dark:bg-green-950/20"
+      bgClass: "bg-green-500/5 border-green-500/10"
     },
     {
       title: "Self-Serve Analytics",
       description: "Empower non-technical teams to answer their own questions without waiting days for the data engineering team.",
       icon: <Zap className="w-8 h-8 text-amber-500" />,
       colSpan: "md:col-span-2",
-      bgClass: "bg-amber-50 dark:bg-amber-950/20"
+      bgClass: "bg-amber-500/5 border-amber-500/10"
     }
   ];
 
@@ -55,12 +55,12 @@ export default function FeaturesSection() {
               transition={{ delay: index * 0.1, duration: 0.5 }}
               className={feature.colSpan}
             >
-              <Card className={`h-full border-0 shadow-md flex flex-col justify-between ${feature.bgClass}`}>
+              <Card className={`h-full border backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-xl flex flex-col justify-between ${feature.bgClass}`}>
                 <CardHeader>
-                  <div className="mb-4 bg-background w-16 h-16 rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="mb-4 bg-background/50 backdrop-blur-md w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm border border-white/10">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-2xl">{feature.title}</CardTitle>
+                  <CardTitle className="text-2xl font-bold tracking-tight">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-base text-muted-foreground leading-relaxed">

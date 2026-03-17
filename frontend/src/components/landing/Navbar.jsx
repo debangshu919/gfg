@@ -21,7 +21,6 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Features', href: '#features' },
     { name: 'How it Works', href: '#how-it-works' },
-    { name: 'Pricing', href: '#pricing' },
   ];
 
   return (
@@ -68,12 +67,7 @@ export default function Navbar() {
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
           <Link to="/dashboard">
-            <Button variant="ghost" size="sm" className="font-medium">
-              Log in
-            </Button>
-          </Link>
-          <Link to="/dashboard">
-            <Button size="sm" className="font-medium">
+            <Button size="sm" className="font-medium bg-primary hover:bg-primary/90 shadow-md transition-all hover:scale-105">
               Get Started
             </Button>
           </Link>
@@ -112,9 +106,6 @@ export default function Navbar() {
             </a>
           ))}
           <div className="flex flex-col gap-2 pt-2">
-            <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full">Log in</Button>
-            </Link>
             <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
               <Button className="w-full">Get Started</Button>
             </Link>
