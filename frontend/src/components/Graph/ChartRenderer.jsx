@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
 import SQLDisplay from "./SQLDisplay";
+import InsightsDisplay from "./InsightsDisplay";
 import "./GraphPlaceholder.css";
 
 const PALETTE = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316"];
@@ -13,6 +14,33 @@ const fmt = (v) => {
   if (n >= 1e6) return `${(n/1e6).toFixed(1)}M`;
   if (n >= 1e3) return `${(n/1e3).toFixed(0)}K`;
   return n % 1 === 0 ? n.toLocaleString() : n.toFixed(2);
+};
+
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+const ChartTooltip = ({ tooltip, isDark }) => {
+  if (!tooltip?.visible) return null;
+
+  return (
+    <div
+      className={`chart-tooltip ${isDark ? "dark" : "light"}`}
+      style={{ left: tooltip.x, top: tooltip.y }}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="chart-tooltip-title">{tooltip.title}</div>
+      <div className="chart-tooltip-row">
+        <span className="chart-tooltip-k">value</span>
+        <span className="chart-tooltip-v">{tooltip.value}</span>
+      </div>
+      {typeof tooltip.percent === "number" && (
+        <div className="chart-tooltip-row">
+          <span className="chart-tooltip-k">percent</span>
+          <span className="chart-tooltip-v">{(tooltip.percent * 100).toFixed(2)}%</span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const AxisLabels = ({ W, H, PAD, pw, ph, xLabel, yLabel, isDark }) => (
@@ -33,7 +61,7 @@ const AxisLabels = ({ W, H, PAD, pw, ph, xLabel, yLabel, isDark }) => (
   </>
 );
 
-const BarChart = ({ data, x_axis, y_axis, isDark }) => {
+const BarChart = ({ data, x_axis, y_axis, isDark, onHover, onLeave }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 100, left: 80 };
   const pw = W - PAD.left - PAD.right;
@@ -78,7 +106,12 @@ const BarChart = ({ data, x_axis, y_axis, isDark }) => {
         return (
           <g key={i} className="bar-group">
             <rect x={PAD.left + i * step} y={PAD.top} width={step} height={ph}
-              fill="transparent" className="bar-hover-bg" />
+              fill="transparent" className="bar-hover-bg"
+              onMouseMove={(e) => onHover?.(e, {
+                title: String(d[x_axis] ?? ""),
+                value: fmt(val)
+              })}
+              onMouseLeave={() => onLeave?.()} />
             <motion.rect x={bx} width={barW} rx={4}
               fill="url(#cr-bar-grad)" filter="url(#cr-glow)"
               initial={{ height: 0, y: PAD.top + ph }}
@@ -106,7 +139,7 @@ const BarChart = ({ data, x_axis, y_axis, isDark }) => {
   );
 };
 
-const LineChart = ({ data, x_axis, y_axis, isDark }) => {
+const LineChart = ({ data, x_axis, y_axis, isDark, onHover, onLeave }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 100, left: 80 };
   const pw = W - PAD.left - PAD.right;
@@ -166,7 +199,13 @@ const LineChart = ({ data, x_axis, y_axis, isDark }) => {
           fill={PALETTE[0]} stroke={isDark ? "#111" : "#fff"} strokeWidth="2"
           className="dot"
           initial={{ scale: 0 }} animate={{ scale: 1 }}
-          transition={{ delay: 1.2 + i * 0.03 }} />
+          transition={{ delay: 1.2 + i * 0.03 }}
+          style={{ cursor: "pointer" }}
+          onMouseMove={(e) => onHover?.(e, {
+            title: String(data[i]?.[x_axis] ?? ""),
+            value: fmt(Number(data[i]?.[y_axis]) || 0)
+          })}
+          onMouseLeave={() => onLeave?.()} />
       ))}
 
       {data.map((d, i) => (
@@ -191,7 +230,7 @@ const LineChart = ({ data, x_axis, y_axis, isDark }) => {
   );
 };
 
-const PieChart = ({ data, x_axis, y_axis, isDark }) => {
+const PieChart = ({ data, x_axis, y_axis, isDark, onHover, onLeave }) => {
   const [hovered, setHovered] = useState(null);
   const W = 480, H = 400, cx = 190, cy = H / 2, r = 130;
   const vals = data.map(d => Number(d[y_axis]) || 0);
@@ -225,8 +264,16 @@ const PieChart = ({ data, x_axis, y_axis, isDark }) => {
             animate={{ scale: 1, opacity: hovered === null || hovered === i ? 1 : 0.3 }}
             transition={{ delay: i * 0.07, duration: 0.5, ease: [0.34, 1.2, 0.64, 1] }}
             style={{ transformOrigin: `${cx}px ${cy}px`, cursor: "pointer" }}
+            onMouseMove={(e) => onHover?.(e, {
+              title: s.label,
+              value: fmt(vals[i]),
+              percent: s.pct
+            })}
             onMouseEnter={() => setHovered(i)}
-            onMouseLeave={() => setHovered(null)} />
+            onMouseLeave={() => {
+              setHovered(null);
+              onLeave?.();
+            }} />
         ))}
         {slices.map((s, i) => s.pct > 0.05 && (
           <motion.text key={i} x={s.lx} y={s.ly}
@@ -262,7 +309,7 @@ const PieChart = ({ data, x_axis, y_axis, isDark }) => {
   );
 };
 
-const ScatterChart = ({ data, x_axis, y_axis, isDark }) => {
+const ScatterChart = ({ data, x_axis, y_axis, isDark, onHover, onLeave }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 80, left: 80 };
   const pw = W - PAD.left - PAD.right;
@@ -312,7 +359,12 @@ const ScatterChart = ({ data, x_axis, y_axis, isDark }) => {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: i * 0.03, duration: 0.4, ease: "backOut" }}
-          style={{ transformOrigin: `${px(xVals[i])}px ${py(yVals[i])}px` }} />
+          style={{ transformOrigin: `${px(xVals[i])}px ${py(yVals[i])}px`, cursor: "pointer" }}
+          onMouseMove={(e) => onHover?.(e, {
+            title: String(d?.[x_axis] ?? fmt(xVals[i])),
+            value: fmt(Number(d?.[y_axis]) || 0)
+          })}
+          onMouseLeave={() => onLeave?.()} />
       ))}
 
       <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + ph}
@@ -325,7 +377,7 @@ const ScatterChart = ({ data, x_axis, y_axis, isDark }) => {
   );
 };
 
-const HistogramChart = ({ data, x_axis, isDark, bins = 10 }) => {
+const HistogramChart = ({ data, x_axis, isDark, bins = 10, onHover, onLeave }) => {
   const W = 800, H = 420;
   const PAD = { top: 30, right: 30, bottom: 100, left: 80 };
   const pw = W - PAD.left - PAD.right;
@@ -336,7 +388,9 @@ const HistogramChart = ({ data, x_axis, isDark, bins = 10 }) => {
   const min = Math.min(...vals), max = Math.max(...vals);
   const binSize = (max - min) / bins || 1;
   const buckets = Array.from({ length: bins }, (_, i) => ({
-    x0: min + i * binSize, count: 0
+    x0: min + i * binSize,
+    x1: min + (i + 1) * binSize,
+    count: 0
   }));
   vals.forEach(v => {
     const idx = Math.min(Math.floor((v - min) / binSize), bins - 1);
@@ -380,7 +434,12 @@ const HistogramChart = ({ data, x_axis, isDark, bins = 10 }) => {
         return (
           <g key={i} className="bar-group">
             <rect x={bx} y={PAD.top} width={barW} height={ph}
-              fill="transparent" className="bar-hover-bg" />
+              fill="transparent" className="bar-hover-bg"
+              onMouseMove={(e) => onHover?.(e, {
+                title: `${fmt(b.x0)} - ${fmt(b.x1)}`,
+                value: String(b.count)
+              })}
+              onMouseLeave={() => onLeave?.()} />
             <motion.rect x={bx + 1} width={barW - 2} rx={3}
               fill="url(#cr-hist-grad)" filter="url(#cr-hist-glow)"
               initial={{ height: 0, y: PAD.top + ph }}
@@ -478,11 +537,66 @@ const resolveChart = (type, data, x_axis, y_axis, isDark) => {
   }
 };
 
-// ─── MAIN — only this function changed ───────────────────────
 function ChartRenderer({ graphData, chartRef }) {
   const { isDark } = useTheme();
   const [chartData, setChartData] = useState(null);
   const [chartKey,  setChartKey]  = useState(0);
+  const chartAreaRef = useRef(null);
+
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, title: "", value: "", percent: undefined });
+
+  const updateTooltip = useCallback((e, payload) => {
+    const el = chartAreaRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const maxX = rect.width;
+    const maxY = rect.height;
+
+    const baseX = e.clientX - rect.left + 12;
+    const baseY = e.clientY - rect.top + 12;
+
+    setTooltip(prev => {
+      const next = {
+        ...prev,
+        visible: true,
+        title: payload?.title ?? prev.title,
+        value: payload?.value ?? prev.value,
+        percent: payload?.percent,
+        x: clamp(baseX, 8, Math.max(8, maxX - 220)),
+        y: clamp(baseY, 8, Math.max(8, maxY - 120))
+      };
+      return next;
+    });
+  }, []);
+
+  const hideTooltip = useCallback(() => {
+    setTooltip(t => (t.visible ? { ...t, visible: false } : t));
+  }, []);
+
+  const chartElement = useMemo(() => {
+    if (!chartData?.data?.length) return null;
+    const { data, chart_type, x_axis, y_axis } = chartData;
+    const type = chart_type || "bar";
+    const props = { data, x_axis, y_axis, isDark };
+    switch (type) {
+      case "pie":
+        return <PieChart {...props} onHover={updateTooltip} onLeave={hideTooltip} />;
+      case "bar":
+      case "column":
+      case "area":
+        return <BarChart {...props} onHover={updateTooltip} onLeave={hideTooltip} />;
+      case "line":
+        return <LineChart {...props} onHover={updateTooltip} onLeave={hideTooltip} />;
+      case "scatter":
+        return <ScatterChart {...props} onHover={updateTooltip} onLeave={hideTooltip} />;
+      case "histogram":
+        return <HistogramChart data={data} x_axis={x_axis} isDark={isDark} bins={10} onHover={updateTooltip} onLeave={hideTooltip} />;
+      case "metric":
+        return <MetricCard data={data} y_axis={y_axis} isDark={isDark} />;
+      default:
+        return resolveChart(type, data, x_axis, y_axis, isDark);
+    }
+  }, [chartData, isDark, updateTooltip, hideTooltip]);
 
   useEffect(() => {
     if (!graphData?.apiResponse) return;
@@ -498,21 +612,23 @@ function ChartRenderer({ graphData, chartRef }) {
     );
   }
 
-  const { data, chart_type, x_axis, y_axis, sql_query } = chartData;
+  const { data, chart_type, x_axis, y_axis, sql_query, response, insights } = chartData;
 
   return (
     <div ref={chartRef} className={`graph-panel ${isDark ? "dark" : "light"}`}>
-      <div className="chart-area">
+      <div className="chart-area" ref={chartAreaRef}>
         <AnimatePresence mode="wait">
           <motion.div key={chartKey} className="chart-motion-wrap"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.3 }}>
-            {resolveChart(chart_type || "bar", data, x_axis, y_axis, isDark)}
+            {chartElement ?? resolveChart(chart_type || "bar", data, x_axis, y_axis, isDark)}
           </motion.div>
         </AnimatePresence>
+        <ChartTooltip tooltip={tooltip} isDark={isDark} />
       </div>
+      <InsightsDisplay insights={insights ?? response} isDark={isDark} />
       <SQLDisplay sqlQuery={sql_query} isDark={isDark} />
     </div>
   );

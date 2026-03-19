@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from agent.csv_agent import analyze_csv_logic
 from agent.main_agent import chatbot
+from agent.tools.insight_Tool import insight_agent
 
 app = FastAPI()
 
@@ -136,11 +137,25 @@ def chat(prompt: Chat):
         columns, rows = fetch_data(sql)
         data = [dict(zip(columns, row)) for row in rows]
 
+        insights = None
+        try:
+            if hasattr(insight_agent, "invoke"):
+                insight_result = insight_agent.invoke(
+                    {"sql_query": sql, "question": prompt.message}
+                )
+            else:
+                insight_result = insight_agent(sql_query=sql, question=prompt.message)
+            if isinstance(insight_result, dict):
+                insights = insight_result.get("insights")
+        except Exception as e:
+            print("Insight generation error:", str(e))
+
         return {
             "success": True,
             "type": "data",
             "prompt": prompt.message,
             "response": ai_response,
+            "insights": insights,
             "sql_query": sql,
             "chart_type": chart_type,
             "x_axis": x_axis,
